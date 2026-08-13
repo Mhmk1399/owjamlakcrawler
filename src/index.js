@@ -55,13 +55,19 @@ async function discoverListings(searchPage) {
     return { listings: [{ token: getDivarToken(targetUrl), url: targetUrl }], diagnostics, mode: "target" };
   }
   if (process.env.CRAWL_MODE === "latest") {
-    const listings = await collectLatestListings(searchPage, { diagnostics });
+    const listings = await collectLatestListings(searchPage, {
+      diagnostics,
+      maxListings: config.crawler.maxListings,
+    });
     diagnostics.endedAt = new Date().toISOString();
     diagnostics.totalUniqueTokens = listings.length;
     diagnostics.partitions.push({ category: "latest", discovered: listings.length });
     return { listings, diagnostics, mode: "latest" };
   }
-  const result = await collectBackfillListings(searchPage, { diagnostics });
+  const result = await collectBackfillListings(searchPage, {
+    diagnostics,
+    maxListings: config.crawler.maxListings,
+  });
   return { ...result, mode: "backfill" };
 }
 
@@ -111,6 +117,7 @@ async function main() {
   }
   const session = await checkDivarSession(searchPage);
   console.log(`[SESSION] state=${session.state} evidence=${session.evidence || "none"}`);
+  console.log(`[CRAWL] listing limit=${config.crawler.maxListings}`);
 
   const { listings, diagnostics } = await discoverListings(searchPage);
   await writeDiagnostics(diagnostics);

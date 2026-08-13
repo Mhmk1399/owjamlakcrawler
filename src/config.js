@@ -18,6 +18,7 @@ export const config = {
   },
 
   crawler: {
+    maxListings: clampInteger(process.env.MAX_LISTINGS, 10, 1, 10000),
     navigationTimeout: Number(
       process.env.NAVIGATION_TIMEOUT || 60000
     ),

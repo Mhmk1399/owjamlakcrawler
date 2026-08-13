@@ -33,6 +33,7 @@ export async function crawlSearchPartition(page, partition, options = {}) {
     diagnostics: options.diagnostics,
     networkObserver: options.networkObserver,
     maxIterations: options.maxIterations,
+    maxListings: options.maxListings,
     onProgress: async (partitionListings) => {
       for (const listing of partitionListings) globalListings.set(listing.token, listing);
       partitionDiagnostic.discovered = partitionListings.length;
@@ -54,13 +55,18 @@ export async function collectBackfillListings(page, options = {}) {
   const globalListings = new Map();
   await fs.mkdir("data", { recursive: true });
   const networkObserver = observeSearchNetwork(page, diagnostics);
+  const maxListings = Number.isFinite(options.maxListings)
+    ? Math.max(0, Math.floor(options.maxListings))
+    : Infinity;
   try {
     for (const partition of options.partitions || DEFAULT_BACKFILL_PARTITIONS) {
+      if (globalListings.size >= maxListings) break;
       await crawlSearchPartition(page, partition, {
         ...options,
         diagnostics,
         globalListings,
         networkObserver,
+        maxListings: maxListings - globalListings.size,
       });
     }
   } finally {

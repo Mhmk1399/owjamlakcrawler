@@ -139,7 +139,24 @@ function collectPublicStructuredPhoneText(raw) {
   return output.join("\n");
 }
 
+// ─── NEW HELPER ────────────────────────────────────────────────────────────────
+// Validates and normalises a raw phone string coming from the contact button.
+// Returns a clean 11-digit Iranian mobile string or null.
+function normalizeAuthenticatedPhone(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  // Strip every non-digit character
+  const digits = raw.replace(/\D/g, "");
+  // Iranian mobile: starts with 09, 11 digits  e.g. 09123456789
+  // or international prefix +98 → 989123456789 (12 digits)
+  if (digits.length === 11 && digits.startsWith("09")) return digits;
+  if (digits.length === 12 && digits.startsWith("989")) return "0" + digits.slice(2);
+  if (digits.length === 10 && digits.startsWith("9")) return "0" + digits;
+  return null;
+}
+// ───────────────────────────────────────────────────────────────────────────────
+
 function inferContact(raw, description, advertiser) {
+  // ── 1. Public phones found in visible text (no login needed) ──────────────
   const candidates = [
     { text: description, source: "description" },
     { text: advertiser.name, source: "advertiser-public-text" },
@@ -148,24 +165,51 @@ function inferContact(raw, description, advertiser) {
     { text: raw.publicContactText, source: "structured-public-data" },
     { text: collectPublicStructuredPhoneText(raw), source: "structured-public-data" },
   ].filter((candidate) => candidate.text);
+
   const phoneSources = {};
   const landlineSources = {};
   for (const candidate of candidates) {
     for (const number of extractPublicPhoneNumbers(candidate.text)) phoneSources[number] ??= candidate.source;
     for (const number of extractPublicLandlines(candidate.text)) landlineSources[number] ??= candidate.source;
   }
+
   const publicPhones = Object.keys(phoneSources);
   const publicLandlines = Object.keys(landlineSources);
+
+  // ── 2. Authenticated phone (revealed after clicking contact button) ────────
+  //
+  // raw.contact.authenticatedPhone is populated by extractPhoneNumber()
+  // inside contact.js AFTER the button click.  We normalise it here and
+  // merge it into publicPhones so the rest of the pipeline stays unchanged.
+  const rawAuthPhone = raw.contact?.authenticatedPhone ?? raw.contact?.phone ?? null;
+  const authenticatedPhone = normalizeAuthenticatedPhone(String(rawAuthPhone ?? ""));
+
+  if (authenticatedPhone && !phoneSources[authenticatedPhone]) {
+    // Prepend so it is the first (most authoritative) phone
+    publicPhones.unshift(authenticatedPhone);
+    phoneSources[authenticatedPhone] = "contact-button";
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const buttonAvailable = Boolean(raw.contact?.contactButtonAvailable);
   const requiresAuthentication = raw.contact?.requiresAuthentication ?? null;
   const hasPublicContact = publicPhones.length > 0 || publicLandlines.length > 0;
-  const source = publicPhones[0] ? phoneSources[publicPhones[0]] : publicLandlines[0] ? landlineSources[publicLandlines[0]] : null;
+  const source = publicPhones[0]
+    ? phoneSources[publicPhones[0]]
+    : publicLandlines[0]
+      ? landlineSources[publicLandlines[0]]
+      : null;
+
   return {
     publicPhones,
     publicLandlines,
     publicPhoneSources: phoneSources,
     publicLandlineSources: landlineSources,
     source,
+    // ── NEW fields saved in final output ─────────────────────────────────────
+    authenticatedPhone,                             // the phone from button click
+    authenticatedPhoneSource: authenticatedPhone ? "contact-button" : null,
+    // ─────────────────────────────────────────────────────────────────────────
     contactButtonAvailable: buttonAvailable,
     contactButton: {
       text: raw.contact?.contactButton?.text ?? null,
@@ -174,7 +218,12 @@ function inferContact(raw, description, advertiser) {
     },
     requiresAuthentication,
     authenticatedSession: raw.contact?.authenticated ?? null,
-    status: contactStatus({ publicPhones, publicLandlines, contactButtonAvailable: buttonAvailable, requiresAuthentication }),
+    status: contactStatus({
+      publicPhones,
+      publicLandlines,
+      contactButtonAvailable: buttonAvailable,
+      requiresAuthentication,
+    }),
     enrichment: {
       status: contactEnrichmentStatus({
         hasPublicContact,
@@ -247,10 +296,20 @@ function qualityFor(listing) {
     description: listing.description,
   };
   const missingFields = [];
-  for (const [key, value] of Object.entries(important)) if (value === null || value === undefined || value === "") missingFields.push(key);
+  for (const [key, value] of Object.entries(important)) {
+    if (value === null || value === undefined || value === "") missingFields.push(key);
+  }
   if (listing.property?.constructionYear === null) missingFields.push("constructionYear");
   if (listing.coordinates?.latitude === null || listing.coordinates?.longitude === null) missingFields.push("coordinates");
-  return { score: Math.round(((Object.keys(important).length - Object.entries(important).filter(([, value]) => value === null || value === undefined || value === "").length) / Object.keys(important).length) * 100), missingFields };
+  return {
+    score: Math.round(
+      ((Object.keys(important).length -
+        Object.entries(important).filter(([, value]) => value === null || value === undefined || value === "").length) /
+        Object.keys(important).length) *
+        100
+    ),
+    missingFields,
+  };
 }
 
 export function normalizeListing(raw = {}) {
@@ -258,11 +317,16 @@ export function normalizeListing(raw = {}) {
   const structuredAttributes = cleanAttributes(raw.structuredAttributes);
   const visibleAttributes = cleanAttributes(raw.visibleAttributes || raw.attributes);
   const attributes = { ...visibleAttributes, ...structuredAttributes };
-  const officialNumber = (field, patterns, keyPattern, parser = parsePersianNumber) => choose([
-    { value: parsedAttribute(structuredAttributes, patterns, parser), source: "structured-json" },
-    { value: structuredNumber(raw, keyPattern, parser), source: "structured-json" },
-    { value: parsedAttribute(visibleAttributes, patterns, parser), source: "dom-widget" },
-  ], fieldSources, field);
+  const officialNumber = (field, patterns, keyPattern, parser = parsePersianNumber) =>
+    choose(
+      [
+        { value: parsedAttribute(structuredAttributes, patterns, parser), source: "structured-json" },
+        { value: structuredNumber(raw, keyPattern, parser), source: "structured-json" },
+        { value: parsedAttribute(visibleAttributes, patterns, parser), source: "dom-widget" },
+      ],
+      fieldSources,
+      field
+    );
   const floorText = first(parsedAttribute(structuredAttributes, [/^طبقه$/]), parsedAttribute(visibleAttributes, [/^طبقه$/]));
   const floorNumbers = extractPersianNumbers(floorText);
   const subcategory = inferSubcategory(raw);
@@ -301,14 +365,22 @@ export function normalizeListing(raw = {}) {
     property: {
       area: officialNumber("area", [/^متراژ$/, /^مساحت$/], /^(area|meterage|size)$/i),
       constructionYear: officialNumber("constructionYear", [/^ساخت$/, /^سال ساخت$/], /^(constructionYear|yearBuilt|buildYear)$/i, parseConstructionYearValue),
-      constructionYearText: yearText && (/قبل از|پیش از|نوساز|ساله/.test(yearText)) ? yearText : null,
+      constructionYearText: yearText && /قبل از|پیش از|نوساز|ساله/.test(yearText) ? yearText : null,
       rooms: officialNumber("rooms", [/^اتاق$/, /^تعداد اتاق$/], /^(rooms|roomCount)$/i),
       roomsIsMinimum: /\+/.test(first(parsedAttribute(structuredAttributes, [/^اتاق$/]), parsedAttribute(visibleAttributes, [/^اتاق$/])) || "") ? true : null,
-      floor: choose([{ value: floorNumbers[0] ?? structuredNumber(raw, /^(floor|floorNumber)$/i), source: floorText ? "dom-widget" : "structured-json" }], fieldSources, "floor"),
-      totalFloors: choose([
-        { value: floorNumbers[1] ?? null, source: "dom-widget" },
-        { value: officialNumber("totalFloors", [/^تعداد طبقات$/], /^(totalFloors|floorCount)$/i), source: fieldSources.totalFloors || "structured-json" },
-      ], fieldSources, "totalFloors"),
+      floor: choose(
+        [{ value: floorNumbers[0] ?? structuredNumber(raw, /^(floor|floorNumber)$/i), source: floorText ? "dom-widget" : "structured-json" }],
+        fieldSources,
+        "floor"
+      ),
+      totalFloors: choose(
+        [
+          { value: floorNumbers[1] ?? null, source: "dom-widget" },
+          { value: officialNumber("totalFloors", [/^تعداد طبقات$/], /^(totalFloors|floorCount)$/i), source: fieldSources.totalFloors || "structured-json" },
+        ],
+        fieldSources,
+        "totalFloors"
+      ),
       unitsPerFloor: officialNumber("unitsPerFloor", [/^تعداد واحد در طبقه$/], /^(unitsPerFloor|unitPerFloor)$/i),
     },
     pricing: {
@@ -316,8 +388,12 @@ export function normalizeListing(raw = {}) {
       pricePerMeter: parsedAttribute(attributes, [/^قیمت هر متر$/], parsePersianMoney),
       deposit: parsedAttribute(attributes, [/^ودیعه/, /^رهن$/], parsePersianMoney),
       rent: parsedAttribute(attributes, [/^اجاره/], parsePersianMoney),
-      isFullMortgage: explicitFullMortgage === true || (isRental && /رهن کامل/.test(officialPriceText))
-        ? true : isRental && officialPriceEntries.length ? false : null,
+      isFullMortgage:
+        explicitFullMortgage === true || (isRental && /رهن کامل/.test(officialPriceText))
+          ? true
+          : isRental && officialPriceEntries.length
+            ? false
+            : null,
       isNegotiable: /قابل مذاکره|توافقی/.test(officialPriceText) ? true : null,
     },
     amenities: {
@@ -392,10 +468,17 @@ export function validateListing(listing) {
   if (!listing?.token) throw new Error("Listing token is missing");
   if (!listing?.url) throw new Error("Listing URL is missing");
   if (!listing?.title) throw new Error("Listing title is missing");
-  const positive = (value, maximum) => Number.isFinite(value) && value > 0 && value <= maximum ? value : null;
+  const positive = (value, maximum) => (Number.isFinite(value) && value > 0 && value <= maximum ? value : null);
   listing.property.area = listing.property.area === null ? null : positive(listing.property.area, 100_000);
-  listing.property.rooms = listing.property.rooms === null || (Number.isFinite(listing.property.rooms) && listing.property.rooms >= 0 && listing.property.rooms <= 20) ? listing.property.rooms : null;
-  listing.property.constructionYear = listing.property.constructionYear === null || (Number.isInteger(listing.property.constructionYear) && listing.property.constructionYear >= 1200 && listing.property.constructionYear <= 1500) ? listing.property.constructionYear : null;
+  listing.property.rooms =
+    listing.property.rooms === null || (Number.isFinite(listing.property.rooms) && listing.property.rooms >= 0 && listing.property.rooms <= 20)
+      ? listing.property.rooms
+      : null;
+  listing.property.constructionYear =
+    listing.property.constructionYear === null ||
+    (Number.isInteger(listing.property.constructionYear) && listing.property.constructionYear >= 1200 && listing.property.constructionYear <= 1500)
+      ? listing.property.constructionYear
+      : null;
   for (const key of ["price", "pricePerMeter", "deposit", "rent"]) {
     if (listing.pricing[key] !== null && (!Number.isFinite(listing.pricing[key]) || listing.pricing[key] < 0)) listing.pricing[key] = null;
   }
@@ -404,8 +487,18 @@ export function validateListing(listing) {
   listing.images = Array.isArray(listing.images) ? listing.images : [];
   listing.contact.publicPhones = Array.isArray(listing.contact.publicPhones) ? listing.contact.publicPhones : [];
   listing.contact.publicLandlines = Array.isArray(listing.contact.publicLandlines) ? listing.contact.publicLandlines : [];
-  listing.contact.publicPhoneSources = listing.contact.publicPhoneSources && typeof listing.contact.publicPhoneSources === "object" ? listing.contact.publicPhoneSources : {};
-  listing.contact.publicLandlineSources = listing.contact.publicLandlineSources && typeof listing.contact.publicLandlineSources === "object" ? listing.contact.publicLandlineSources : {};
+  listing.contact.publicPhoneSources =
+    listing.contact.publicPhoneSources && typeof listing.contact.publicPhoneSources === "object" ? listing.contact.publicPhoneSources : {};
+  listing.contact.publicLandlineSources =
+    listing.contact.publicLandlineSources && typeof listing.contact.publicLandlineSources === "object" ? listing.contact.publicLandlineSources : {};
+
+  // ── NEW: keep authenticatedPhone consistent ───────────────────────────────
+  listing.contact.authenticatedPhone =
+    typeof listing.contact.authenticatedPhone === "string" && listing.contact.authenticatedPhone.length === 11
+      ? listing.contact.authenticatedPhone
+      : null;
+  // ─────────────────────────────────────────────────────────────────────────
+
   listing.quality = qualityFor(listing);
   return listing;
 }

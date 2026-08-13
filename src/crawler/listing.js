@@ -1,5 +1,6 @@
+// listing.js
 import { canonicalizeDivarUrl } from "../utils/url.js";
-import { inspectContactState } from "./contact.js";
+import { inspectContactState, extractPhoneNumber } from "./contact.js";
 import {
   fillMissingListingFields,
   normalizeListing,
@@ -89,18 +90,22 @@ export async function extractVisibleDetailData(page) {
     (await safeAttribute(page.locator('meta[property="og:title"]'), "content"));
 
   const dom = await page.evaluate(() => {
-    const clean = (value) => (value || "")
-      .replace(/[ \t]+/g, " ")
-      .replace(/ *\n */g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
+    const clean = (value) =>
+      (value || "")
+        .replace(/[ \t]+/g, " ")
+        .replace(/ *\n */g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
     const visible = (element) => {
       const style = window.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
     };
+
     const labels = /^(متراژ|مساحت|ساخت|سال ساخت|اتاق|تعداد اتاق|طبقه|تعداد طبقات|تعداد واحد در طبقه|قیمت کل|قیمت فروش|قیمت هر متر|ودیعه(?: \(تومان\))?|رهن|اجاره(?:ٔ ماهانه)?(?: \(تومان\))?|آسانسور|پارکینگ|انباری|بالکن|سند|جهت ساختمان|وضعیت واحد|محله|محدوده|منطقه|نوع آگهی‌دهنده)$/;
     const attributes = {};
+
     const addPair = (label, value) => {
       label = clean(label);
       value = clean(value);
@@ -112,10 +117,14 @@ export async function extractVisibleDetailData(page) {
       const cells = [...row.querySelectorAll(":scope > th, :scope > td")];
       if (cells.length === 2) addPair(cells[0].innerText, cells[1].innerText);
     }
+
     for (const term of document.querySelectorAll("dt")) {
       if (term.nextElementSibling?.tagName === "DD") addPair(term.innerText, term.nextElementSibling.innerText);
     }
-    for (const row of document.querySelectorAll('[class~="kt-base-row"], [data-testid*="specification-row"], [data-testid*="attribute-row"]')) {
+
+    for (const row of document.querySelectorAll(
+      '[class~="kt-base-row"], [data-testid*="specification-row"], [data-testid*="attribute-row"]'
+    )) {
       if (!visible(row)) continue;
       const direct = [...row.children].filter(visible);
       if (direct.length === 2) {
@@ -126,13 +135,13 @@ export async function extractVisibleDetailData(page) {
       }
     }
 
-    // Divar's three-column property widget renders one title row and one value row.
-    // Pair only equal-length leaf arrays; never pair whole grouped containers.
     for (const group of document.querySelectorAll('[class~="kt-group-row"], [data-testid*="group-row"]')) {
-      const titleNodes = [...group.querySelectorAll('[class~="kt-group-row-item__title"], [data-testid*="title"]')]
-        .filter((element) => element.children.length === 0 && labels.test(clean(element.innerText)));
-      const valueNodes = [...group.querySelectorAll('[class~="kt-group-row-item__value"], [data-testid*="value"]')]
-        .filter((element) => element.children.length === 0 && clean(element.innerText));
+      const titleNodes = [
+        ...group.querySelectorAll('[class~="kt-group-row-item__title"], [data-testid*="title"]'),
+      ].filter((element) => element.children.length === 0 && labels.test(clean(element.innerText)));
+      const valueNodes = [
+        ...group.querySelectorAll('[class~="kt-group-row-item__value"], [data-testid*="value"]'),
+      ].filter((element) => element.children.length === 0 && clean(element.innerText));
       if (titleNodes.length > 0 && titleNodes.length === valueNodes.length) {
         titleNodes.forEach((node, index) => addPair(node.innerText, valueNodes[index].innerText));
       }
@@ -142,7 +151,10 @@ export async function extractVisibleDetailData(page) {
     for (const label of ["آسانسور", "پارکینگ", "انباری", "بالکن"]) {
       const candidates = [...document.querySelectorAll("td, span, p, div")]
         .filter((element) => element.children.length === 0 && visible(element))
-        .filter((element) => clean(element.innerText) === label || clean(element.innerText) === `${label} ندارد`);
+        .filter(
+          (element) =>
+            clean(element.innerText) === label || clean(element.innerText) === `${label} ندارد`
+        );
       if (!candidates.length) {
         amenities[label] = null;
         continue;
@@ -156,23 +168,35 @@ export async function extractVisibleDetailData(page) {
       amenities[label] = !disabled;
     }
 
-    const descriptionHeading = [...document.querySelectorAll("h2, h3, h4, p, div")]
-      .find((element) => clean(element.textContent) === "توضیحات");
+    const descriptionHeading = [...document.querySelectorAll("h2, h3, h4, p, div")].find(
+      (element) => clean(element.textContent) === "توضیحات"
+    );
     let description = null;
     if (descriptionHeading) {
-      const candidates = [descriptionHeading.nextElementSibling, ...(descriptionHeading.parentElement?.children || [])]
+      const candidates = [
+        descriptionHeading.nextElementSibling,
+        ...(descriptionHeading.parentElement?.children || []),
+      ]
         .filter((element) => element && element !== descriptionHeading)
         .map((element) => clean(element.innerText))
         .filter((text) => text && text !== "توضیحات");
       description = candidates.sort((a, b) => b.length - a.length)[0] || null;
     }
 
-    const breadcrumbs = [...document.querySelectorAll('nav[aria-label*="breadcrumb" i] a, ol[aria-label*="breadcrumb" i] a, [class*="breadcrumb"] a')]
-      .map((element) => clean(element.innerText)).filter(Boolean);
+    const breadcrumbs = [
+      ...document.querySelectorAll(
+        'nav[aria-label*="breadcrumb" i] a, ol[aria-label*="breadcrumb" i] a, [class*="breadcrumb"] a'
+      ),
+    ]
+      .map((element) => clean(element.innerText))
+      .filter(Boolean);
+
     const images = [];
     const addImage = (value) => {
       if (!value) return;
-      try { images.push(new URL(value, location.href).href); } catch {}
+      try {
+        images.push(new URL(value, location.href).href);
+      } catch {}
     };
     document.querySelectorAll("main img, article img").forEach((img) => {
       addImage(img.currentSrc || img.src);
@@ -180,25 +204,47 @@ export async function extractVisibleDetailData(page) {
     });
     addImage(document.querySelector('meta[property="og:image"]')?.content);
 
-    const domCoordinates = [...document.querySelectorAll("[data-latitude][data-longitude], [data-lat][data-lng]")].map((element) => ({
+    const domCoordinates = [
+      ...document.querySelectorAll("[data-latitude][data-longitude], [data-lat][data-lng]"),
+    ].map((element) => ({
       latitude: element.dataset.latitude ?? element.dataset.lat,
       longitude: element.dataset.longitude ?? element.dataset.lng,
-      is_nearby: element.dataset.isNearby === "true" ? true : element.dataset.isNearby === "false" ? false : undefined,
+      is_nearby:
+        element.dataset.isNearby === "true"
+          ? true
+          : element.dataset.isNearby === "false"
+            ? false
+            : undefined,
     }));
-    const metas = Object.fromEntries([...document.querySelectorAll("meta[content]")]
-      .map((meta) => [meta.getAttribute("property") || meta.name, meta.content]).filter(([key]) => key));
+
+    const metas = Object.fromEntries(
+      [...document.querySelectorAll("meta[content]")]
+        .map((meta) => [meta.getAttribute("property") || meta.name, meta.content])
+        .filter(([key]) => key)
+    );
+
     const mainLines = clean(document.querySelector("main")?.innerText || "").split("\n");
-    const publishedText = mainLines.find((line) => /(?:لحظاتی|دقایقی|ساعاتی|\d+|[۰-۹]+).*(?:پیش|قبل)/.test(line)) || null;
-    const agencyLine = mainLines.find((line) => /(?:آژانس املاک|مشاور املاک)/.test(line) && line.length < 120) || null;
-    const contactButtonAvailable = [...document.querySelectorAll('button, [role="button"]')]
-      .some((element) => clean(element.innerText).includes("اطلاعات تماس"));
+    const publishedText =
+      mainLines.find((line) =>
+        /(?:لحظاتی|دقایقی|ساعاتی|\d+|[۰-۹]+).*(?:پیش|قبل)/.test(line)
+      ) || null;
+    const agencyLine =
+      mainLines.find(
+        (line) => /(?:آژانس املاک|مشاور املاک)/.test(line) && line.length < 120
+      ) || null;
+
+    const contactButtonAvailable = [...document.querySelectorAll('button, [role="button"]')].some(
+      (element) => clean(element.innerText).includes("اطلاعات تماس")
+    );
 
     return {
       attributes,
       visibleAttributes: attributes,
       amenities: {
-        elevator: amenities["آسانسور"], parking: amenities["پارکینگ"],
-        storage: amenities["انباری"], balcony: amenities["بالکن"],
+        elevator: amenities["آسانسور"],
+        parking: amenities["پارکینگ"],
+        storage: amenities["انباری"],
+        balcony: amenities["بالکن"],
       },
       description,
       breadcrumbs,
@@ -215,14 +261,21 @@ export async function extractVisibleDetailData(page) {
   return {
     title,
     ...dom,
-    breadcrumbs: dom.breadcrumbs.length ? dom.breadcrumbs : [...new Set(fallbackBreadcrumbs)].slice(0, 10),
+    breadcrumbs: dom.breadcrumbs.length
+      ? dom.breadcrumbs
+      : [...new Set(fallbackBreadcrumbs)].slice(0, 10),
   };
 }
 
 function mergeValue(preferred, fallback) {
   if (preferred === null || preferred === undefined || preferred === "") return fallback;
   if (Array.isArray(preferred)) return preferred.length ? preferred : fallback;
-  if (typeof preferred === "object" && !Array.isArray(preferred) && typeof fallback === "object" && fallback) {
+  if (
+    typeof preferred === "object" &&
+    !Array.isArray(preferred) &&
+    typeof fallback === "object" &&
+    fallback
+  ) {
     const merged = { ...fallback };
     for (const [key, value] of Object.entries(preferred)) merged[key] = mergeValue(value, fallback[key]);
     return merged;
@@ -237,7 +290,14 @@ export function mergeListingSources(...sources) {
 async function waitForDetailRender(page) {
   await Promise.race([
     page.locator("main h1, article h1, h1").first().waitFor({ state: "visible", timeout: 8000 }),
-    page.waitForFunction(() => document.querySelector('script[type="application/json"], script[type="application/ld+json"], script#__NEXT_DATA__'), null, { timeout: 8000 }),
+    page.waitForFunction(
+      () =>
+        document.querySelector(
+          'script[type="application/json"], script[type="application/ld+json"], script#__NEXT_DATA__'
+        ),
+      null,
+      { timeout: 8000 }
+    ),
     page.waitForTimeout(2500),
   ]).catch(() => {});
 }
@@ -245,17 +305,43 @@ async function waitForDetailRender(page) {
 export async function crawlListingDetail(page, listing) {
   const url = canonicalizeDivarUrl(listing?.url);
   if (!url) throw new Error(`Invalid Divar listing URL: ${listing?.url || "(missing)"}`);
+
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await waitForDetailRender(page);
+
   const structured = await extractStructuredPageData(page);
   const visible = await extractVisibleDetailData(page);
   const contactState = await inspectContactState(page);
+
+  // ── Click contact button and extract phone number ──────────────────────────
+  let phoneData = { authenticatedPhone: null, source: "skipped" };
+
+ console.log(`\n🔍🔍🔍 [DEBUG] About to check contact for token: ${listing.token}`);
+console.log(`🔍🔍🔍 [DEBUG] contactState:`, JSON.stringify(contactState));
+
+if (contactState?.contactButtonAvailable) {
+  console.log(`🔍🔍🔍 [DEBUG] contactButtonAvailable=TRUE, calling extractPhoneNumber...`);
+  phoneData = await extractPhoneNumber(page, listing.token);
+  console.log(`🔍🔍🔍 [DEBUG] extractPhoneNumber returned:`, JSON.stringify(phoneData));
+  await page.waitForTimeout(500 + Math.random() * 1000);
+} else {
+  console.log(`🔍🔍🔍 [DEBUG] contactButtonAvailable=FALSE, skipping`);
+}
+  // ──────────────────────────────────────────────────────────────────────────
+
   const raw = mergeListingSources(
     { token: listing.token ?? null, url },
     structured,
-    { contact: contactState },
-    visible,
+    {
+      contact: {
+        ...contactState,
+        authenticatedPhone: phoneData.authenticatedPhone,  // ← phone from button click
+        phoneSource: phoneData.source,                     // ← where it was found
+      },
+    },
+    visible
   );
+
   const normalized = normalizeListing(raw);
   const filled = fillMissingListingFields(normalized, raw);
   return validateListing(filled);

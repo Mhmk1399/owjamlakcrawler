@@ -89,6 +89,17 @@ async function readVisibleListings(page) {
   );
 }
 
+export function addUniqueListings(listings, links, maxListings = Infinity) {
+  const limit = Number.isFinite(maxListings) ? Math.max(0, Math.floor(maxListings)) : Infinity;
+  for (const link of links) {
+    if (listings.size >= limit) break;
+    const url = canonicalizeDivarUrl(link.href);
+    const token = getDivarToken(url);
+    if (url && token && !listings.has(token)) listings.set(token, { token, url });
+  }
+  return listings;
+}
+
 async function scrollState(page) {
   return page.evaluate(() => {
     const root = document.scrollingElement;
@@ -173,6 +184,9 @@ export async function collectListingUrls(page, options = {}) {
   let moreAdsClicks = 0;
   const maxIterations = options.maxIterations || 150;
   const maxStalls = options.maxStalls || 5;
+  const maxListings = Number.isFinite(options.maxListings)
+    ? Math.max(0, Math.floor(options.maxListings))
+    : Infinity;
 
   try {
     for (let iteration = 1; iteration <= maxIterations && consecutiveStalls < maxStalls; iteration += 1) {
@@ -180,14 +194,14 @@ export async function collectListingUrls(page, options = {}) {
       const previousTokenCount = listings.size;
       const beforeState = await scrollState(page);
       const links = await readVisibleListings(page);
-      for (const link of links) {
-        const url = canonicalizeDivarUrl(link.href);
-        const token = getDivarToken(url);
-        if (url && token && !listings.has(token)) listings.set(token, { token, url });
-      }
+      addUniqueListings(listings, links, maxListings);
 
       const newTokens = listings.size - previousTokenCount;
       if (newTokens > 0 && options.onProgress) await options.onProgress([...listings.values()]);
+      if (listings.size >= maxListings) {
+        console.log(`[SEARCH] listing limit reached (${maxListings}); starting detail crawl`);
+        break;
+      }
       const networkBefore = networkObserver.count();
       const movement = await advanceScroll(page);
       const clickedMoreAds = moreAdsClicks < 20 && await clickMoreAdsButton(page);
