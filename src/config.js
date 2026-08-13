@@ -1,5 +1,10 @@
 import "dotenv/config";
 
+function clampInteger(value, fallback, minimum, maximum) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
+}
+
 export const config = {
   baseUrl: "https://divar.ir",
 
@@ -16,5 +21,9 @@ export const config = {
     navigationTimeout: Number(
       process.env.NAVIGATION_TIMEOUT || 60000
     ),
+    detailConcurrency: clampInteger(process.env.DETAIL_CONCURRENCY, 3, 1, 8),
+    detailMaxRetries: clampInteger(process.env.DETAIL_MAX_RETRIES, 2, 0, 5),
+    shutdownGraceMs: clampInteger(process.env.SHUTDOWN_GRACE_MS, 15000, 1000, 60000),
+    generateCombinedJson: process.env.GENERATE_COMBINED_JSON !== "false",
   },
 };

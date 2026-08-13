@@ -1,4 +1,5 @@
 import { canonicalizeDivarUrl } from "../utils/url.js";
+import { inspectContactState } from "./contact.js";
 import {
   fillMissingListingFields,
   normalizeListing,
@@ -248,7 +249,13 @@ export async function crawlListingDetail(page, listing) {
   await waitForDetailRender(page);
   const structured = await extractStructuredPageData(page);
   const visible = await extractVisibleDetailData(page);
-  const raw = mergeListingSources({ token: listing.token ?? null, url }, structured, visible);
+  const contactState = await inspectContactState(page);
+  const raw = mergeListingSources(
+    { token: listing.token ?? null, url },
+    structured,
+    { contact: contactState },
+    visible,
+  );
   const normalized = normalizeListing(raw);
   const filled = fillMissingListingFields(normalized, raw);
   return validateListing(filled);

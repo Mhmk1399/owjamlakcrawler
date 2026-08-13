@@ -66,6 +66,11 @@ export function observeSearchNetwork(page, diagnostics) {
 export async function openSearchPage(page, url = config.searchUrl) {
   console.log(`\n[SEARCH] opening ${url}`);
   await page.goto(url, { waitUntil: "domcontentloaded" });
+  const accountError = await page.locator("#error-state").filter({ hasText: /خطا در شناسایی حساب کاربری/ }).count().catch(() => 0);
+  if (accountError) {
+    console.warn("[SEARCH] account identification error; retrying the ordinary page load once");
+    await page.reload({ waitUntil: "domcontentloaded" });
+  }
   try {
     await page.waitForFunction(
       () => [...document.links].some((link) => link.getAttribute("href")?.includes("/v/")),
@@ -80,7 +85,6 @@ async function readVisibleListings(page) {
   return page.locator('a[href*="/v/"]').evaluateAll((links) =>
     links.map((link) => ({
       href: link.getAttribute("href"),
-      cardText: (link.innerText || link.closest("article")?.innerText || "").trim(),
     })),
   );
 }
@@ -179,7 +183,7 @@ export async function collectListingUrls(page, options = {}) {
       for (const link of links) {
         const url = canonicalizeDivarUrl(link.href);
         const token = getDivarToken(url);
-        if (url && token && !listings.has(token)) listings.set(token, { token, url, cardText: link.cardText || null });
+        if (url && token && !listings.has(token)) listings.set(token, { token, url });
       }
 
       const newTokens = listings.size - previousTokenCount;

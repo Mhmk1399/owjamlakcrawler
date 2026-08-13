@@ -9,6 +9,7 @@ import {
 import { extractPublicLandlines, extractPublicPhoneNumbers } from "../utils/phone.js";
 import { extractCoordinates, validateCoordinates } from "../utils/coordinates.js";
 import { filterListingImages } from "../utils/images.js";
+import { contactEnrichmentStatus, contactStatus } from "../crawler/contact.js";
 
 const first = (...values) => values.find((value) => value !== null && value !== undefined && value !== "") ?? null;
 const KNOWN_ATTRIBUTE = /^(متراژ|مساحت|ساخت|سال ساخت|اتاق|تعداد اتاق|طبقه|تعداد طبقات|تعداد واحد در طبقه|قیمت کل|قیمت فروش|قیمت هر متر|ودیعه(?: \(تومان\))?|رهن|اجاره(?:ٔ ماهانه)?(?: \(تومان\))?|آسانسور|پارکینگ|انباری|بالکن|سند|جهت ساختمان|وضعیت واحد|محله|محدوده|منطقه|نوع آگهی‌دهنده)$/;
@@ -122,18 +123,67 @@ function collectStructuredImages(input, output = [], imageContext = false, seen 
   return output;
 }
 
+function collectPublicStructuredPhoneText(raw) {
+  const output = [];
+  const walk = (input, seen = new Set()) => {
+    if (!input || typeof input !== "object" || seen.has(input)) return;
+    seen.add(input);
+    for (const [key, value] of Object.entries(input)) {
+      if (/^(telephone|phone|phoneNumber|publicPhone|businessPhone)$/i.test(key) && typeof value === "string") output.push(value);
+      else if (value && typeof value === "object") walk(value, seen);
+    }
+  };
+  // JSON-LD is intended as public page metadata. Do not scan arbitrary application
+  // state, where numeric IDs can resemble phones or gated data may be present.
+  walk(raw.jsonLd || []);
+  return output.join("\n");
+}
+
 function inferContact(raw, description, advertiser) {
-  const descriptionText = description || "";
-  const publicText = [advertiser.name, advertiser.agencyName, JSON.stringify(structuredRoot(raw))].filter(Boolean).join("\n");
-  const publicPhones = [...new Set([...extractPublicPhoneNumbers(descriptionText), ...extractPublicPhoneNumbers(publicText)])];
-  const publicLandlines = [...new Set([...extractPublicLandlines(descriptionText), ...extractPublicLandlines(publicText)])];
-  const descriptionHasNumber = extractPublicPhoneNumbers(descriptionText).length + extractPublicLandlines(descriptionText).length > 0;
-  const publicHasNumber = extractPublicPhoneNumbers(publicText).length + extractPublicLandlines(publicText).length > 0;
+  const candidates = [
+    { text: description, source: "description" },
+    { text: advertiser.name, source: "advertiser-public-text" },
+    { text: advertiser.agencyName, source: "agency-public-text" },
+    { text: raw.title, source: "structured-public-data" },
+    { text: raw.publicContactText, source: "structured-public-data" },
+    { text: collectPublicStructuredPhoneText(raw), source: "structured-public-data" },
+  ].filter((candidate) => candidate.text);
+  const phoneSources = {};
+  const landlineSources = {};
+  for (const candidate of candidates) {
+    for (const number of extractPublicPhoneNumbers(candidate.text)) phoneSources[number] ??= candidate.source;
+    for (const number of extractPublicLandlines(candidate.text)) landlineSources[number] ??= candidate.source;
+  }
+  const publicPhones = Object.keys(phoneSources);
+  const publicLandlines = Object.keys(landlineSources);
+  const buttonAvailable = Boolean(raw.contact?.contactButtonAvailable);
+  const requiresAuthentication = raw.contact?.requiresAuthentication ?? null;
+  const hasPublicContact = publicPhones.length > 0 || publicLandlines.length > 0;
+  const source = publicPhones[0] ? phoneSources[publicPhones[0]] : publicLandlines[0] ? landlineSources[publicLandlines[0]] : null;
   return {
     publicPhones,
     publicLandlines,
-    source: publicHasNumber ? "public-content" : descriptionHasNumber ? "description" : null,
-    contactButtonAvailable: Boolean(raw.contact?.contactButtonAvailable),
+    publicPhoneSources: phoneSources,
+    publicLandlineSources: landlineSources,
+    source,
+    contactButtonAvailable: buttonAvailable,
+    contactButton: {
+      text: raw.contact?.contactButton?.text ?? null,
+      disabled: raw.contact?.contactButton?.disabled ?? null,
+      visible: Boolean(raw.contact?.contactButton?.visible),
+    },
+    requiresAuthentication,
+    authenticatedSession: raw.contact?.authenticated ?? null,
+    status: contactStatus({ publicPhones, publicLandlines, contactButtonAvailable: buttonAvailable, requiresAuthentication }),
+    enrichment: {
+      status: contactEnrichmentStatus({
+        hasPublicContact,
+        contactButtonAvailable: buttonAvailable,
+        requiresAuthentication,
+        providerAvailable: Boolean(raw.contactProviderAvailable),
+      }),
+      provider: null,
+    },
   };
 }
 
@@ -354,6 +404,8 @@ export function validateListing(listing) {
   listing.images = Array.isArray(listing.images) ? listing.images : [];
   listing.contact.publicPhones = Array.isArray(listing.contact.publicPhones) ? listing.contact.publicPhones : [];
   listing.contact.publicLandlines = Array.isArray(listing.contact.publicLandlines) ? listing.contact.publicLandlines : [];
+  listing.contact.publicPhoneSources = listing.contact.publicPhoneSources && typeof listing.contact.publicPhoneSources === "object" ? listing.contact.publicPhoneSources : {};
+  listing.contact.publicLandlineSources = listing.contact.publicLandlineSources && typeof listing.contact.publicLandlineSources === "object" ? listing.contact.publicLandlineSources : {};
   listing.quality = qualityFor(listing);
   return listing;
 }

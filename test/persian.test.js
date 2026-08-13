@@ -102,12 +102,19 @@ test("maps explicit one-to-one Divar rows into normalized fields", () => {
 test("extracts and normalizes only plausible public Iranian mobile numbers", () => {
   assert.deepEqual(extractPublicPhoneNumbers("تماس: 09121234567"), ["09121234567"]);
   assert.deepEqual(extractPublicPhoneNumbers("تماس ۰۹۱۲۱۲۳۴۵۶۷"), ["09121234567"]);
+  assert.deepEqual(extractPublicPhoneNumbers("شماره ٠٩١٢١٢٣٤٥٦٧"), ["09121234567"]);
   assert.deepEqual(extractPublicPhoneNumbers("+98 912 123 4567"), ["09121234567"]);
   assert.deepEqual(extractPublicPhoneNumbers("0098-912-123-4567"), ["09121234567"]);
   assert.deepEqual(extractPublicPhoneNumbers("98 912 123 4567"), ["09121234567"]);
   assert.deepEqual(extractPublicPhoneNumbers("قیمت ۱۲,۵۰۰,۰۰۰,۰۰۰ تومان"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("قیمت 17000000000 و هر متر 200000000 تومان"), []);
   assert.deepEqual(extractPublicPhoneNumbers("سال ساخت ۱۳۹۸"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("سال ساخت 1404"), []);
   assert.deepEqual(extractPublicPhoneNumbers("متراژ ۱۱۰"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("متراژ 85"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("مختصات 35.721234, 51.382345"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("token=ga99aXk0 id=2cececbd-c6dc-47f2-8ae5-a7f059517273"), []);
+  assert.deepEqual(extractPublicPhoneNumbers("تماس 0912-123-4567 یا ۰۹۱۲۱۲۳۴۵۶۷"), ["09121234567"]);
   assert.deepEqual(extractPublicLandlines("دفتر: +98 21 1234 5678"), ["02112345678"]);
 });
 
@@ -137,6 +144,18 @@ test("description text cannot mark a sale listing as full mortgage", () => {
     description: "امکان رهن کامل تا مبلغ ۱۰ میلیارد",
   });
   assert.equal(result.pricing.isFullMortgage, null);
+});
+
+test("does not treat arbitrary structured IDs as public contact data", () => {
+  const result = normalizeRealEstateListing({
+    token: "contact-safe",
+    url: "https://divar.ir/v/example/contact-safe",
+    title: "نمونه آگهی",
+    embeddedJson: [{ userId: "09593213933", objectId: "06538140149" }],
+  });
+  assert.deepEqual(result.contact.publicPhones, []);
+  assert.deepEqual(result.contact.publicLandlines, []);
+  assert.equal(result.contact.source, null);
 });
 
 test("fills missing detail fields without retaining grouped-header artifacts", () => {
