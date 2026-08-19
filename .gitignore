@@ -4,7 +4,9 @@ node_modules/
 logs/*
 screenshots/*
 data/*
+owj-token-bot/data/*
 
 !logs/.gitkeep
 !screenshots/.gitkeep
 !data/.gitkeep
+!owj-token-bot/data/.gitkeep

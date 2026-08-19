@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://owj.local/schemas/scoring-ready.schema.json",
+  "title": "Owj scoring-ready listing collection",
+  "type": "object",
+  "required": ["schemaVersion", "cleaningVersion", "generatedAt", "source", "cleaning", "rejected", "listings"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "cleaningVersion": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "source": { "type": "object" },
+    "cleaning": { "type": "object" },
+    "rejected": { "type": "array" },
+    "listings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/listing" }
+    }
+  },
+  "$defs": {
+    "listing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "cleaningVersion", "token", "url", "title", "neighborhood", "property", "amenities", "location", "pricing", "source", "cleaning"],
+      "properties": {
+        "schemaVersion": { "const": "1.0.0" },
+        "cleaningVersion": { "type": "string" },
+        "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+        "url": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "neighborhood": { "type": "string", "minLength": 1 },
+        "property": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["area", "rooms", "constructionYear", "floor", "totalFloors"],
+          "properties": {
+            "area": { "type": "number", "minimum": 20, "maximum": 1000 },
+            "rooms": { "type": "number", "minimum": 0 },
+            "constructionYear": { "type": "number", "minimum": 1300 },
+            "floor": { "type": "number" },
+            "totalFloors": { "type": "number", "minimum": 1 }
+          }
+        },
+        "amenities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["elevator", "parking", "storage", "balcony"],
+          "properties": {
+            "elevator": { "type": "number", "minimum": 0, "maximum": 1 },
+            "parking": { "type": "number", "minimum": 0, "maximum": 1 },
+            "storage": { "type": "number", "minimum": 0, "maximum": 1 },
+            "balcony": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["latitude", "longitude", "accuracy", "radiusMeters"],
+          "properties": {
+            "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+            "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+            "accuracy": { "enum": ["exact", "approximate"] },
+            "radiusMeters": { "type": "number", "minimum": 0 }
+          }
+        },
+        "pricing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["currency", "askingPrice", "askingPricePerMeter"],
+          "properties": {
+            "currency": { "const": "TOMAN" },
+            "askingPrice": { "type": "number", "exclusiveMinimum": 0 },
+            "askingPricePerMeter": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "source": { "type": "object" },
+        "cleaning": { "type": "object" }
+      }
+    }
+  }
+}

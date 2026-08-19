@@ -32,6 +32,8 @@ test("canonicalizes listing URLs and gets tokens", () => {
   assert.equal(canonicalizeDivarUrl(input), "https://divar.ir/v/test/gabhsmsg");
   assert.equal(getDivarToken(input), "gabhsmsg");
   assert.equal(canonicalizeDivarUrl("/v/foo/abc123"), "https://divar.ir/v/foo/abc123");
+  assert.equal(canonicalizeDivarUrl("/v/abc123"), "https://divar.ir/v/abc123");
+  assert.equal(getDivarToken("/v/abc123"), "abc123");
   assert.equal(
     canonicalizeDivarUrl("https://divar.ir/v/%D8%AE%D8%A7%D9%86%D9%87/abc123?x=1"),
     "https://divar.ir/v/%D8%AE%D8%A7%D9%86%D9%87/abc123",
@@ -75,7 +77,13 @@ test("does not retain grouped widgets as fake attributes", () => {
   assert.equal(result.amenities.storage, true);
   assert.equal(result.amenities.balcony, null);
   assert.deepEqual(result.attributes, {});
-  assert.deepEqual(result.coordinates, { latitude: null, longitude: null, accuracy: null, source: null });
+  assert.deepEqual(result.coordinates, {
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    radiusMeters: null,
+    source: null,
+  });
 });
 
 test("maps explicit one-to-one Divar rows into normalized fields", () => {
@@ -124,7 +132,57 @@ test("validates and qualifies exposed coordinates", () => {
   assert.equal(validateCoordinates(null, null), null);
   assert.deepEqual(extractCoordinates({
     embeddedJson: [{ location: { latitude: 35.7, longitude: 51.4, is_nearby: true } }],
-  }), { latitude: 35.7, longitude: 51.4, accuracy: "approximate", source: "embedded-json" });
+  }), {
+    latitude: 35.7,
+    longitude: 51.4,
+    accuracy: "approximate",
+    radiusMeters: null,
+    source: "embedded-json",
+  });
+  assert.deepEqual(extractCoordinates({
+    embeddedJson: [{ location: { type: "EXACT", exact_data: { point: { latitude: 35.8, longitude: 51.5 } } } }],
+  }), {
+    latitude: 35.8,
+    longitude: 51.5,
+    accuracy: "exact",
+    radiusMeters: null,
+    source: "embedded-json",
+  });
+  assert.deepEqual(extractCoordinates({
+    embeddedJson: [{ location: { type: "FUZZY", fuzzy_data: { point: { latitude: 35.9, longitude: 51.6 } } } }],
+  }), {
+    latitude: 35.9,
+    longitude: 51.6,
+    accuracy: "approximate",
+    radiusMeters: null,
+    source: "embedded-json",
+  });
+  assert.deepEqual(extractCoordinates({
+    jsonLd: [{ geo: { latitude: 35.1, longitude: 51.1 } }],
+    pageState: [{ location: { type: "EXACT", exact_data: { point: { latitude: 35.2, longitude: 51.2 } } } }],
+  }), {
+    latitude: 35.2,
+    longitude: 51.2,
+    accuracy: "exact",
+    radiusMeters: null,
+    source: "page-state",
+  });
+});
+
+test("reads Divar public city and neighborhood fields from structured web_info", () => {
+  const result = normalizeRealEstateListing({
+    token: "location-fields",
+    url: "https://divar.ir/v/example/location-fields",
+    title: "نمونه ملک",
+    jsonLd: [{
+      web_info: {
+        city_persian: "تهران",
+        district_persian: "تهرانسر شمالی",
+      },
+    }],
+  });
+  assert.equal(result.city, "تهران");
+  assert.equal(result.neighborhood, "تهرانسر شمالی");
 });
 
 test("keeps only the best real listing image variant", () => {
@@ -198,5 +256,11 @@ test("validation nulls suspicious detail values", () => {
   assert.equal(listing.property.rooms, null);
   assert.equal(listing.property.constructionYear, null);
   assert.equal(listing.pricing.price, null);
-  assert.deepEqual(listing.coordinates, { latitude: null, longitude: null, accuracy: null, source: null });
+  assert.deepEqual(listing.coordinates, {
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    radiusMeters: null,
+    source: null,
+  });
 });

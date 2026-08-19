@@ -7,6 +7,7 @@ import { checkDivarSession } from "./crawler/session.js";
 import { config } from "./config.js";
 import { canonicalizeDivarUrl, getDivarToken } from "./utils/url.js";
 import { processListings } from "./workers/detailWorkerPool.js";
+import { sendCrawlerAlert } from "./utils/alerts.js";
 import {
   generateCombinedListings,
   validSavedTokens,
@@ -158,6 +159,12 @@ async function main() {
     console.warn("[EXPORT] no valid token files; preserving the existing combined JSON");
   }
   printWorkerReport(stats, contactSummary, session);
+  if (stats.failed > 0) {
+    await sendCrawlerAlert(
+      `Crawler finished with ${stats.failed} failed listing(s), ${stats.successful} successful, and ${stats.retries} retries.`,
+      "warning"
+    );
+  }
   await closeContext();
   if (shutdownRequested) process.exitCode = 130;
 }
@@ -165,6 +172,7 @@ async function main() {
 main().catch(async (error) => {
   console.error("\nCRAWLER ERROR:");
   console.error(error);
+  await sendCrawlerAlert(error.stack || error.message || String(error), "error");
   await closeContext();
   process.exitCode = 1;
 }).finally(() => {

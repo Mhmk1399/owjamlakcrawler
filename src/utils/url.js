@@ -10,7 +10,9 @@ export function canonicalizeDivarUrl(value) {
     if (url.hostname !== "divar.ir" && !url.hostname.endsWith(".divar.ir")) {
       return null;
     }
-    if (parts[0] !== "v" || parts.length < 3 || !parts.at(-1)) return null;
+    // Divar currently emits both /v/SLUG/TOKEN and the shorter /v/TOKEN form
+    // from its public post API.
+    if (parts[0] !== "v" || parts.length < 2 || !parts.at(-1)) return null;
 
     const pathname = parts
       .map((part) => encodeURIComponent(decodeURIComponent(part)))

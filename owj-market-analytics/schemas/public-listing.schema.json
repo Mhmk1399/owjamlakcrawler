@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://owj.local/schemas/public-listing.schema.json",
+  "title": "Owj public market listing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "token",
+    "url",
+    "title",
+    "category",
+    "subcategory",
+    "city",
+    "district",
+    "neighborhood",
+    "publishedText",
+    "crawlPartition",
+    "property",
+    "pricing",
+    "amenities",
+    "advertiserType",
+    "coordinates",
+    "imageCount",
+    "quality",
+    "firstSeenAt",
+    "lastSeenAt",
+    "contentFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+    "url": { "type": "string", "format": "uri" },
+    "title": { "type": "string", "minLength": 1 },
+    "category": { "type": ["string", "null"] },
+    "subcategory": { "type": ["string", "null"] },
+    "city": { "type": ["string", "null"] },
+    "district": { "type": ["string", "null"] },
+    "neighborhood": { "type": ["string", "null"] },
+    "publishedText": { "type": ["string", "null"] },
+    "crawlPartition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "expectedSubcategory", "area"],
+      "properties": {
+        "category": { "type": ["string", "null"] },
+        "expectedSubcategory": { "type": ["string", "null"] },
+        "area": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["id", "name", "slug"],
+          "properties": {
+            "id": { "type": ["integer", "null"] },
+            "name": { "type": ["string", "null"] },
+            "slug": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "property": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["area", "constructionYear", "rooms", "floor", "totalFloors", "unitsPerFloor"],
+      "properties": {
+        "area": { "type": ["number", "null"] },
+        "constructionYear": { "type": ["integer", "null"] },
+        "rooms": { "type": ["number", "null"] },
+        "floor": { "type": ["number", "null"] },
+        "totalFloors": { "type": ["number", "null"] },
+        "unitsPerFloor": { "type": ["number", "null"] }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "price", "pricePerMeter", "deposit", "rent", "isFullMortgage", "isNegotiable"],
+      "properties": {
+        "currency": { "const": "TOMAN" },
+        "price": { "type": ["number", "null"] },
+        "pricePerMeter": { "type": ["number", "null"] },
+        "deposit": { "type": ["number", "null"] },
+        "rent": { "type": ["number", "null"] },
+        "isFullMortgage": { "type": ["boolean", "null"] },
+        "isNegotiable": { "type": ["boolean", "null"] }
+      }
+    },
+    "amenities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elevator", "parking", "storage", "balcony"],
+      "properties": {
+        "elevator": { "type": ["boolean", "null"] },
+        "parking": { "type": ["boolean", "null"] },
+        "storage": { "type": ["boolean", "null"] },
+        "balcony": { "type": ["boolean", "null"] }
+      }
+    },
+    "advertiserType": { "type": ["string", "null"] },
+    "coordinates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latitude", "longitude", "accuracy", "radiusMeters", "source"],
+      "properties": {
+        "latitude": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+        "longitude": { "type": ["number", "null"], "minimum": -180, "maximum": 180 },
+        "accuracy": { "type": ["string", "null"] },
+        "radiusMeters": { "type": ["number", "null"], "minimum": 0 },
+        "source": { "type": ["string", "null"] }
+      }
+    },
+    "imageCount": { "type": "integer", "minimum": 0 },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "missingFields"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "missingFields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "firstSeenAt": { "type": "string", "format": "date-time" },
+    "lastSeenAt": { "type": "string", "format": "date-time" },
+    "contentFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

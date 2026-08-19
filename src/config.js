@@ -18,12 +18,18 @@ export const config = {
   },
 
   crawler: {
-    maxListings: clampInteger(process.env.MAX_LISTINGS, 10, 1, 10000),
+    maxListings: clampInteger(process.env.MAX_LISTINGS, 100, 1, 10000),
     navigationTimeout: Number(
       process.env.NAVIGATION_TIMEOUT || 60000
     ),
     detailConcurrency: clampInteger(process.env.DETAIL_CONCURRENCY, 3, 1, 8),
     detailMaxRetries: clampInteger(process.env.DETAIL_MAX_RETRIES, 2, 0, 5),
+    contactRequestIntervalMs: clampInteger(
+      process.env.CONTACT_REQUEST_INTERVAL_MS,
+      10000,
+      0,
+      60000,
+    ),
     shutdownGraceMs: clampInteger(process.env.SHUTDOWN_GRACE_MS, 15000, 1000, 60000),
     generateCombinedJson: process.env.GENERATE_COMBINED_JSON !== "false",
   },

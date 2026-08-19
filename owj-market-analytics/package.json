@@ -1,0 +1,26 @@
+{
+  "name": "owj-market-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public-only live market analytics for Owj real-estate listings",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "dashboard:dev": "vite --config dashboard/vite.config.js",
+    "dashboard:build": "vite build --config dashboard/vite.config.js",
+    "score": "node scripts/score-listings.js",
+    "build": "npm run dashboard:build",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "playwright": "^1.62.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.5",
+    "vite": "^8.2.1"
+  }
+}

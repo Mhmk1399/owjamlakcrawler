@@ -9,7 +9,7 @@ import {
 import { extractPublicLandlines, extractPublicPhoneNumbers } from "../utils/phone.js";
 import { extractCoordinates, validateCoordinates } from "../utils/coordinates.js";
 import { filterListingImages } from "../utils/images.js";
-import { contactEnrichmentStatus, contactStatus } from "../crawler/contact.js";
+import { contactEnrichmentStatus, contactStatus } from "../utils/contactStatus.js";
 
 const first = (...values) => values.find((value) => value !== null && value !== undefined && value !== "") ?? null;
 const KNOWN_ATTRIBUTE = /^(متراژ|مساحت|ساخت|سال ساخت|اتاق|تعداد اتاق|طبقه|تعداد طبقات|تعداد واحد در طبقه|قیمت کل|قیمت فروش|قیمت هر متر|ودیعه(?: \(تومان\))?|رهن|اجاره(?:ٔ ماهانه)?(?: \(تومان\))?|آسانسور|پارکینگ|انباری|بالکن|سند|جهت ساختمان|وضعیت واحد|محله|محدوده|منطقه|نوع آگهی‌دهنده)$/;
@@ -106,9 +106,24 @@ function inferSubcategory(raw) {
 function inferLocation(raw, attributes) {
   const published = normalizePersianText(raw.publishedText)?.split(/\sدر\s/).at(1)?.split("،").map((part) => part.trim()) || [];
   return {
-    city: first(raw.city, parsedAttribute(attributes, [/^شهر$/]), published[0], (raw.breadcrumbs || []).find((item) => item === "تهران")),
-    district: first(raw.district, parsedAttribute(attributes, [/^منطقه$/])),
-    neighborhood: first(raw.neighborhood, parsedAttribute(attributes, [/^محله$/, /^محدوده$/]), published[1], structured(raw, /^(neighborhood|locality)$/i)),
+    city: first(
+      raw.city,
+      parsedAttribute(attributes, [/^شهر$/]),
+      structured(raw, /^(city|city_persian|addressLocality)$/i),
+      published[0],
+      (raw.breadcrumbs || []).find((item) => item === "تهران"),
+    ),
+    district: first(
+      raw.district,
+      parsedAttribute(attributes, [/^منطقه$/]),
+      structured(raw, /^(region|region_persian|municipalDistrict)$/i),
+    ),
+    neighborhood: first(
+      raw.neighborhood,
+      parsedAttribute(attributes, [/^محله$/, /^محدوده$/]),
+      structured(raw, /^(neighborhood|locality|district|district_persian)$/i),
+      published[1],
+    ),
   };
 }
 
@@ -483,7 +498,15 @@ export function validateListing(listing) {
     if (listing.pricing[key] !== null && (!Number.isFinite(listing.pricing[key]) || listing.pricing[key] < 0)) listing.pricing[key] = null;
   }
   const validCoordinates = validateCoordinates(listing.coordinates.latitude, listing.coordinates.longitude);
-  if (!validCoordinates) listing.coordinates = { latitude: null, longitude: null, accuracy: null, source: null };
+  if (!validCoordinates) {
+    listing.coordinates = {
+      latitude: null,
+      longitude: null,
+      accuracy: null,
+      radiusMeters: null,
+      source: null,
+    };
+  }
   listing.images = Array.isArray(listing.images) ? listing.images : [];
   listing.contact.publicPhones = Array.isArray(listing.contact.publicPhones) ? listing.contact.publicPhones : [];
   listing.contact.publicLandlines = Array.isArray(listing.contact.publicLandlines) ? listing.contact.publicLandlines : [];

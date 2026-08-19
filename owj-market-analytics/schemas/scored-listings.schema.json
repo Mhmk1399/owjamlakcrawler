@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://owj.local/schemas/scored-listings.schema.json",
+  "title": "Owj scored apartment listings",
+  "type": "object",
+  "required": ["schemaVersion", "scoringVersion", "generatedAt", "source", "modelValidation", "summary", "listings"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "scoringVersion": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "source": { "type": "object" },
+    "modelValidation": { "type": "object" },
+    "summary": { "type": "object" },
+    "listings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["schemaVersion", "scoringVersion", "rank", "token", "url", "title", "neighborhood", "property", "amenities", "location", "asking", "source", "cleaning", "valuation", "scores", "evidence", "formula", "warnings", "explanations"],
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+          "valuation": { "type": "object" },
+          "scores": {
+            "type": "object",
+            "required": ["recommendation", "dealValue", "modelValue", "nearbyValue", "localPosition", "confidence", "dataQuality", "band"],
+            "properties": {
+              "recommendation": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "dealValue": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "modelValue": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "nearbyValue": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "localPosition": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "dataQuality": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "band": { "enum": ["strong-value", "promising", "fair", "weak-value"] }
+            }
+          },
+          "evidence": { "type": "object" },
+          "warnings": { "type": "array", "items": { "type": "string" } },
+          "explanations": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

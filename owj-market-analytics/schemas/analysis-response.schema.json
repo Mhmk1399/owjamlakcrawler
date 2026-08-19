@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://owj.local/schemas/analysis-response.schema.json",
+  "title": "Owj live listing analysis",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "token", "status", "area", "nearby", "prediction", "score", "warnings"],
+  "properties": {
+    "schemaVersion": { "const": "1.1.0" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "token": { "type": "string" },
+    "status": { "enum": ["scored", "insufficient-data", "ineligible"] },
+    "area": { "type": ["object", "null"] },
+    "nearby": { "type": "object" },
+    "prediction": { "type": ["object", "null"] },
+    "score": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+    "components": { "type": "object" },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  }
+}

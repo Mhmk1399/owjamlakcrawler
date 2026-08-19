@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Master Redis queue to coordinate work across containers
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  worker-1:
+    build: .
+    environment:
+      - WORKER_ID=worker-1
+      - DIVAR_ACCESS_TOKEN=${ACCOUNT_1_TOKEN}
+      - PROXY_URL=${PROXY_1_URL}
+      - DECOY_RATIO=3 # View 3 decoy ads for every 1 phone request
+    depends_on:
+      - redis
+    restart: always
+
+  worker-2:
+    build: .
+    environment:
+      - WORKER_ID=worker-2
+      - DIVAR_ACCESS_TOKEN=${ACCOUNT_2_TOKEN}
+      - PROXY_URL=${PROXY_2_URL}
+      - DECOY_RATIO=3
+    depends_on:
+      - redis
+    restart: always
+
+  worker-3:
+    build: .
+    environment:
+      - WORKER_ID=worker-3
+      - DIVAR_ACCESS_TOKEN=${ACCOUNT_3_TOKEN}
+      - PROXY_URL=${PROXY_3_URL}
+      - DECOY_RATIO=3
+    depends_on:
+      - redis
+    restart: always
+
+  worker-4:
+    build: .
+    environment:
+      - WORKER_ID=worker-4
+      - DIVAR_ACCESS_TOKEN=${ACCOUNT_4_TOKEN}
+      - PROXY_URL=${PROXY_4_URL}
+      - DECOY_RATIO=3
+    depends_on:
+      - redis
+    restart: always
+
+  worker-5:
+    build: .
+    environment:
+      - WORKER_ID=worker-5
+      - DIVAR_ACCESS_TOKEN=${ACCOUNT_5_TOKEN}
+      - PROXY_URL=${PROXY_5_URL}
+      - DECOY_RATIO=3
+    depends_on:
+      - redis
+    restart: always

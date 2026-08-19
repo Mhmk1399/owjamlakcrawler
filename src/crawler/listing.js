@@ -1,6 +1,5 @@
 // listing.js
 import { canonicalizeDivarUrl } from "../utils/url.js";
-import { inspectContactState, extractPhoneNumber } from "./contact.js";
 import {
   fillMissingListingFields,
   normalizeListing,
@@ -303,6 +302,9 @@ async function waitForDetailRender(page) {
 }
 
 export async function crawlListingDetail(page, listing) {
+  // Keep authenticated contact code out of public-only consumers of this
+  // module. It is loaded only by the authenticated detail workflow.
+  const { inspectContactState, extractPhoneNumber } = await import("./contact.js");
   const url = canonicalizeDivarUrl(listing?.url);
   if (!url) throw new Error(`Invalid Divar listing URL: ${listing?.url || "(missing)"}`);
 
