@@ -30,14 +30,14 @@ test("extracts only valid Tehran Divar areas and de-duplicates slugs", () => {
   assert.throws(() => extractTehranAreas({}), /not an array/);
 });
 
-test("builds deterministic buy-apartment partitions with ten candidates per area", () => {
+test("builds deterministic buy-apartment partitions with fifteen candidates per area", () => {
   const queue = buildApartmentAreaQueue(extractTehranAreas(placesFixture), {
-    listingsPerArea: 10,
+    listingsPerArea: 15,
   });
   assert.equal(queue.length, 3);
   assert.ok(queue.every((partition) => partition.category === "buy-apartment"));
   assert.ok(queue.every((partition) => partition.expectedSubcategory === "buy-residential-apartment"));
-  assert.ok(queue.every((partition) => partition.limit === 10));
+  assert.ok(queue.every((partition) => partition.limit === 15));
   assert.ok(queue.every((partition) => partition.url.startsWith("https://divar.ir/s/tehran/buy-apartment/")));
   assert.equal(buildApartmentAreaQueue(queue.map((item) => item.area), { maxAreas: 2 }).length, 2);
   assert.equal(apartmentAreaUrl("abshar"), "https://divar.ir/s/tehran/buy-apartment/abshar");

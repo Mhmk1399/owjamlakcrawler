@@ -91,7 +91,7 @@ export function apartmentAreaUrl(slug) {
 
 export function buildApartmentAreaQueue(
   areas,
-  { listingsPerArea = 10, maxAreas = 0 } = {},
+  { listingsPerArea = 15, maxAreas = 0 } = {},
 ) {
   const perAreaLimit = Math.max(1, Math.floor(listingsPerArea));
   const selected = maxAreas > 0 ? areas.slice(0, Math.floor(maxAreas)) : areas;

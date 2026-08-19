@@ -6,7 +6,7 @@ This service currently:
 
 - loads Divar's live Tehran area directory;
 - queues every area under the public `buy-apartment` category;
-- discovers up to 10 apartment-sale listings per area;
+- discovers 15 apartment-sale listings per area, paginating until the target or confirmed source exhaustion;
 - extracts each listing from Divar's public `posts-v2` JSON, with HTML as fallback;
 - blocks the Divar contact endpoint at the browser network layer;
 - stores current listings and observation history as JSON;
@@ -83,7 +83,7 @@ cleaning losses, coordinate quality, and neighborhood sample behavior. For
 dashboard-only development, keep the analytics service running and
 use `npm run dev:analytics-dashboard`; Vite proxies JSON requests to port 4567.
 
-Copy `.env.example` to `.env` inside this directory to override defaults. Automatic crawling is enabled by default: one crawl starts when the server becomes ready and repeats every six hours (`ANALYTICS_CRAWL_INTERVAL_MS=21600000`). The collector targets 10 listings per Divar Tehran area (`ANALYTICS_LISTINGS_PER_AREA=10`). Set `ANALYTICS_MAX_AREAS=3` for a quick 30-listing development crawl; `0` means every available Tehran area. `ANALYTICS_MAX_LISTINGS=10000` is the run-wide safety ceiling. Set `ANALYTICS_AUTO_CRAWL=false` to start only the JSON server and trigger a crawl with `POST /crawl`.
+Copy `.env.example` to `.env` inside this directory to override defaults. Automatic crawling is enabled by default: one crawl starts when the server becomes ready and repeats every six hours (`ANALYTICS_CRAWL_INTERVAL_MS=21600000`). The collector targets 15 listings per Divar Tehran area (`ANALYTICS_LISTINGS_PER_AREA=15`). Public search pagination continues until every area reaches that target. If Divar reports no next page, stops returning new tokens for the configured stall limit, sends a platform-limit response, or the run-wide safety ceiling is reached, the crawler records an explicit shortfall instead of looping forever. Set `ANALYTICS_MAX_AREAS=3` for a quick 45-listing development crawl; `0` means every available Tehran area. `ANALYTICS_MAX_LISTINGS=10000` is the run-wide safety ceiling. Set `ANALYTICS_AUTO_CRAWL=false` to start only the JSON server and trigger a crawl with `POST /crawl`.
 
 Each stored record keeps both the actual `subcategory`/`neighborhood` returned by
 the detail API and a `crawlPartition` object containing the requested category

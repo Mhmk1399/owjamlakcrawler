@@ -6,17 +6,13 @@ import {
   fetchApartmentAreaListings,
 } from "../src/collector/divarSearch.js";
 
-function responseFixture() {
+function responseFixture({ tokens = ["gaOne111", "gaTwo222", "gaOne111", "bad/token", "gaThree3"], hasNextPage = true, paginationData = "opaque-data-not-retained" } = {}) {
   return {
     list_widgets: [
-      { widget_type: "POST_ROW", data: { token: "gaOne111", tracker_session_id: "private-tracker" } },
       { widget_type: "BANNER", data: { token: "ignore-banner" } },
-      { widget_type: "POST_ROW", data: { token: "gaTwo222" } },
-      { widget_type: "POST_ROW", data: { token: "gaOne111" } },
-      { widget_type: "POST_ROW", data: { token: "bad/token" } },
-      { widget_type: "POST_ROW", data: { token: "gaThree3" } },
+      ...tokens.map((token) => ({ widget_type: "POST_ROW", data: { token, tracker_session_id: "private-tracker" } })),
     ],
-    pagination: { has_next_page: true, data: "opaque-data-not-retained" },
+    pagination: { has_next_page: hasNextPage, data: paginationData },
   };
 }
 
@@ -39,21 +35,49 @@ test("extracts only unique POST_ROW tokens and constructs clean public URLs", ()
   assert.doesNotMatch(JSON.stringify(listings), /tracker|opaque/);
 });
 
-test("fetches one public area page without cookies or tracker state", async () => {
-  let captured;
+test("paginates public area search until the per-area target is reached", async () => {
+  const captured = [];
+  const pages = [
+    responseFixture({ tokens: ["gaOne111", "gaTwo222"], paginationData: "cursor-one" }),
+    responseFixture({ tokens: ["gaTwo222", "gaThree3"], paginationData: "cursor-two" }),
+    responseFixture({ tokens: ["gaFour44", "gaFive555"], hasNextPage: false }),
+  ];
   const requestContext = {
     post: async (url, options) => {
-      captured = { url, options };
+      captured.push({ url, options });
       return {
         status: () => 200,
-        json: async () => responseFixture(),
+        json: async () => pages[captured.length - 1],
       };
     },
   };
-  const result = await fetchApartmentAreaListings(requestContext, { id: 992 }, { limit: 10 });
-  assert.equal(captured.url, "https://api.divar.ir/v8/postlist/w/search");
-  assert.equal(result.listings.length, 3);
-  assert.equal(result.hasNextPage, true);
-  assert.doesNotMatch(JSON.stringify(captured.options.headers), /cookie|authorization|access.?token/i);
+  const visitedPages = [];
+  const result = await fetchApartmentAreaListings(requestContext, { id: 992 }, {
+    limit: 5,
+    beforePage: ({ page }) => visitedPages.push(page),
+  });
+  assert.equal(captured.length, 3);
+  assert.equal(captured[0].url, "https://api.divar.ir/v8/postlist/w/search");
+  assert.equal(captured[0].options.data.pagination_data, undefined);
+  assert.equal(captured[1].options.data.pagination_data, "cursor-one");
+  assert.equal(captured[2].options.data.pagination_data, "cursor-two");
+  assert.deepEqual(visitedPages, [1, 2, 3]);
+  assert.equal(result.listings.length, 5);
+  assert.equal(result.pagesFetched, 3);
+  assert.equal(result.stopReason, "target-reached");
+  assert.doesNotMatch(JSON.stringify(captured[0].options.headers), /cookie|authorization|access.?token/i);
   assert.doesNotMatch(JSON.stringify(result), /tracker|opaque/);
+});
+
+test("records an explicit shortfall when Divar exhausts an area", async () => {
+  const requestContext = {
+    post: async () => ({
+      status: () => 200,
+      json: async () => responseFixture({ tokens: ["gaOnly111"], hasNextPage: false }),
+    }),
+  };
+  const result = await fetchApartmentAreaListings(requestContext, { id: 992 }, { limit: 15 });
+  assert.equal(result.listings.length, 1);
+  assert.equal(result.pagesFetched, 1);
+  assert.equal(result.stopReason, "source-exhausted");
 });

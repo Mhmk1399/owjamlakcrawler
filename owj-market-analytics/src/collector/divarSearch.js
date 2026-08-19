@@ -12,12 +12,12 @@ export class DivarPublicSearchError extends Error {
   }
 }
 
-export function apartmentAreaSearchPayload(areaId) {
+export function apartmentAreaSearchPayload(areaId, paginationData) {
   const id = Number(areaId);
   if (!Number.isInteger(id) || id <= 0) {
     throw new DivarPublicSearchError("Divar area ID is invalid", { code: "invalid-area-id" });
   }
-  return {
+  const payload = {
     city_ids: ["1"],
     source_view: "CATEGORY",
     // A sparse area should report a shortfall, not be filled with recommended
@@ -39,6 +39,8 @@ export function apartmentAreaSearchPayload(areaId) {
     },
     previous_place_ids: [],
   };
+  if (paginationData !== undefined) payload.pagination_data = paginationData;
+  return payload;
 }
 
 export function extractSearchListings(document, limit = 10) {
@@ -63,49 +65,101 @@ export function extractSearchListings(document, limit = 10) {
 export async function fetchApartmentAreaListings(
   requestContext,
   area,
-  { limit = 10, timeoutMs = 15_000 } = {},
+  {
+    limit = 15,
+    timeoutMs = 15_000,
+    maxPages = 150,
+    maxStalls = 5,
+    beforePage = async () => {},
+  } = {},
 ) {
   if (typeof requestContext?.post !== "function") {
     throw new DivarPublicSearchError("Public request context is unavailable", {
       code: "request-context-unavailable",
     });
   }
-  let response;
-  try {
-    response = await requestContext.post(SEARCH_ENDPOINT, {
-      data: apartmentAreaSearchPayload(area?.id),
-      failOnStatusCode: false,
-      timeout: timeoutMs,
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-      },
-    });
-  } catch (error) {
-    throw new DivarPublicSearchError(`Divar area search request failed: ${error.message}`, {
-      code: "request-failed",
-    });
+  const maximum = Math.max(1, Math.floor(limit));
+  const pageLimit = Math.max(1, Math.floor(maxPages));
+  const stallLimit = Math.max(1, Math.floor(maxStalls));
+  const listings = new Map();
+  let paginationData;
+  let hasNextPage = true;
+  let pagesFetched = 0;
+  let consecutiveStalls = 0;
+  let status = 0;
+  let stopReason = "source-exhausted";
+
+  while (
+    listings.size < maximum &&
+    hasNextPage &&
+    pagesFetched < pageLimit &&
+    consecutiveStalls < stallLimit
+  ) {
+    await beforePage({ page: pagesFetched + 1, collected: listings.size, target: maximum });
+    let response;
+    try {
+      response = await requestContext.post(SEARCH_ENDPOINT, {
+        data: apartmentAreaSearchPayload(area?.id, paginationData),
+        failOnStatusCode: false,
+        timeout: timeoutMs,
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+        },
+      });
+    } catch (error) {
+      throw new DivarPublicSearchError(`Divar area search request failed: ${error.message}`, {
+        code: "request-failed",
+      });
+    }
+    status = response.status();
+    if (status !== 200) {
+      throw new DivarPublicSearchError(`Divar area search returned HTTP ${status}`, {
+        status,
+        code: "unexpected-status",
+      });
+    }
+    let document;
+    try {
+      document = await response.json();
+    } catch (error) {
+      throw new DivarPublicSearchError(`Divar area search was not valid JSON: ${error.message}`, {
+        status,
+        code: "invalid-json",
+      });
+    }
+    pagesFetched += 1;
+    const before = listings.size;
+    for (const listing of extractSearchListings(document, maximum)) {
+      if (!listings.has(listing.token)) listings.set(listing.token, listing);
+      if (listings.size >= maximum) break;
+    }
+    consecutiveStalls = listings.size === before ? consecutiveStalls + 1 : 0;
+    hasNextPage = document.pagination?.has_next_page === true;
+    if (listings.size >= maximum) {
+      stopReason = "target-reached";
+      break;
+    }
+    if (!hasNextPage) {
+      stopReason = "source-exhausted";
+      break;
+    }
+    if (document.pagination?.data === undefined || document.pagination?.data === null) {
+      hasNextPage = false;
+      stopReason = "pagination-unavailable";
+      break;
+    }
+    paginationData = document.pagination.data;
   }
-  const status = response.status();
-  if (status !== 200) {
-    throw new DivarPublicSearchError(`Divar area search returned HTTP ${status}`, {
-      status,
-      code: "unexpected-status",
-    });
-  }
-  let document;
-  try {
-    document = await response.json();
-  } catch (error) {
-    throw new DivarPublicSearchError(`Divar area search was not valid JSON: ${error.message}`, {
-      status,
-      code: "invalid-json",
-    });
-  }
+
+  if (listings.size < maximum && consecutiveStalls >= stallLimit) stopReason = "stalled";
+  else if (listings.size < maximum && pagesFetched >= pageLimit) stopReason = "max-pages";
   return {
-    listings: extractSearchListings(document, limit),
+    listings: [...listings.values()],
     status,
-    hasNextPage: document.pagination?.has_next_page === true,
+    hasNextPage,
+    pagesFetched,
+    stopReason,
   };
 }
 

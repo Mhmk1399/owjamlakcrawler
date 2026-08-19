@@ -254,15 +254,23 @@ export class PublicCrawler {
       });
       let discovered;
       try {
-        await this.waitForPublicRequestSlot(`area:${partition.area.slug}`);
         const result = await fetchApartmentAreaListings(
           this.publicPostRequest,
           partition.area,
-          { limit },
+          {
+            limit,
+            maxPages: this.config.crawl.maxSearchIterations,
+            maxStalls: this.config.crawl.maxSearchStalls,
+            beforePage: ({ page }) => this.waitForPublicRequestSlot(
+              `area:${partition.area.slug}:page:${page}`,
+            ),
+          },
         );
         discovered = result.listings;
         partitionDiagnostic.source = "public-search-api";
         partitionDiagnostic.hasNextPage = result.hasNextPage;
+        partitionDiagnostic.pagesFetched = result.pagesFetched;
+        partitionDiagnostic.stopReason = result.stopReason;
         diagnostics.relevantSearchRequests.push({
           method: "POST",
           urlWithoutSensitiveData: "https://api.divar.ir/v8/postlist/w/search",
@@ -277,6 +285,8 @@ export class PublicCrawler {
           count: discovered.length,
           target: limit,
           hasNextPage: result.hasNextPage,
+          pagesFetched: result.pagesFetched,
+          stopReason: result.stopReason,
         });
       } catch (apiError) {
         partitionDiagnostic.source = "html-fallback";

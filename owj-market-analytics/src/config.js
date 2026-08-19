@@ -42,7 +42,7 @@ export const config = {
     maxListings: integer(process.env.ANALYTICS_MAX_LISTINGS, 10_000, 1, 100_000),
     listingsPerArea: integer(
       process.env.ANALYTICS_LISTINGS_PER_AREA,
-      10,
+      15,
       1,
       100,
     ),
