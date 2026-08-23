@@ -19,7 +19,7 @@ export default function ScoringAnalyticsPage() {
   }, []);
   if (!data && !error) return <LoadingPage message="Building the scoring overview" />;
   if (error) return <ErrorPage message={error} />;
-  const validation = data.modelValidation;
+  const validation = data.valuationValidation || data.modelValidation;
   const cleaning = data.cleaning;
   const maxBin = Math.max(...data.distributions.histogram.map((bin) => bin.count), 1);
   const coordinateStyle = { background: `conic-gradient(var(--cyan) 0 ${data.coordinates.exactPercentage}%, var(--orange) ${data.coordinates.exactPercentage}% 100%)` };
@@ -31,9 +31,9 @@ export default function ScoringAnalyticsPage() {
 
         <section className="analytics-kpi-grid">
           <ValidationCard label="Scored ads" value={formatNumber(data.total)} detail={`${formatNumber(cleaning.rejectedCount)} rejected before scoring`} />
-          <ValidationCard label="Median validation error" value={formatPercent(validation.medianAbsolutePercentageError)} detail="Typical out-of-fold price-per-m² error" tone="orange" />
+          <ValidationCard label="Blended median error" value={formatPercent(validation.medianAbsolutePercentageError)} detail={`Base model: ${formatPercent(data.modelValidation.medianAbsolutePercentageError)}`} tone="orange" />
           <ValidationCard label="Within ±20%" value={formatPercent(validation.within20Percent)} detail={`${formatPercent(validation.within30Percent)} land within ±30%`} tone="green" />
-          <ValidationCard label="Log-scale R²" value={validation.rSquaredLog} detail={`Quality gate ${validation.qualityScore} / 100`} tone="violet" />
+          <ValidationCard label="Log-scale R²" value={validation.rSquaredLog} detail={`${formatNumber(data.distributions.highRiskCount)} listings flagged high risk`} tone="violet" />
         </section>
 
         <div className="analytics-grid">
@@ -45,7 +45,7 @@ export default function ScoringAnalyticsPage() {
 
           <section className="panel analytics-panel analytics-panel--wide"><div className="compact-heading"><span>Cleaning</span><h2>What entered the scoring machine</h2><p>Rejected records never receive a score. Optional gaps are imputed explicitly and lower data-quality confidence.</p></div><div className="cleaning-flow"><div><span>Raw input</span><strong>{formatNumber(cleaning.inputCount)}</strong></div><i>→</i><div><span>Accepted</span><strong>{formatNumber(cleaning.acceptedCount)}</strong></div><i>→</i><div><span>Scored</span><strong>{formatNumber(data.total)}</strong></div><div className="rejected"><span>Rejected</span><strong>{formatNumber(cleaning.rejectedCount)}</strong></div></div><div className="dictionary-grid"><Dictionary title="Rejection reasons" values={cleaning.rejectionCounts} /><Dictionary title={`Imputations · ${formatNumber(cleaning.recordsWithImputation)} records`} values={cleaning.imputationCounts} /></div></section>
 
-          <section className="panel analytics-panel analytics-panel--full"><div className="compact-heading"><span>Spatial view</span><h2>Neighborhood sample behavior</h2><p>Only neighborhoods with at least five accepted ads are shown. These averages describe the collected sample, not all Tehran transactions.</p></div><div className="table-wrap"><table className="neighborhood-table"><thead><tr><th>Neighborhood</th><th>Ads</th><th>Average score</th><th>Strong value</th><th>Avg confidence</th><th>Avg asking / m²</th><th>Avg model discount</th></tr></thead><tbody>{data.neighborhoods.map((area) => <tr key={area.name}><td><strong dir="auto">{area.name}</strong></td><td>{formatNumber(area.count)}</td><td><span className="table-score">{area.averageScore}</span></td><td>{formatNumber(area.strongValueCount)}</td><td>{formatPercent(area.averageConfidence)}</td><td>{formatMoney(area.averageAskingPricePerMeter)}</td><td className={area.averageModelDiscountPct >= 0 ? "cell-good" : "cell-warn"}>{formatPercent(area.averageModelDiscountPct, true)}</td></tr>)}</tbody></table></div></section>
+          <section className="panel analytics-panel analytics-panel--full"><div className="compact-heading"><span>Spatial view</span><h2>Neighborhood sample behavior</h2><p>Only neighborhoods with at least five accepted ads are shown. These averages describe the collected sample, not all Tehran transactions.</p></div><div className="table-wrap"><table className="neighborhood-table"><thead><tr><th>Neighborhood</th><th>Ads</th><th>Average score</th><th>Avg property</th><th>Avg risk</th><th>High risk</th><th>Avg confidence</th><th>Avg asking / m²</th><th>Avg model discount</th></tr></thead><tbody>{data.neighborhoods.map((area) => <tr key={area.name}><td><strong dir="auto">{area.name}</strong></td><td>{formatNumber(area.count)}</td><td><span className="table-score">{area.averageScore}</span></td><td>{formatNumber(area.averagePropertyQuality)}</td><td>{formatNumber(area.averageRisk)}</td><td>{formatNumber(area.highRiskCount)}</td><td>{formatPercent(area.averageConfidence)}</td><td>{formatMoney(area.averageAskingPricePerMeter)}</td><td className={area.averageModelDiscountPct >= 0 ? "cell-good" : "cell-warn"}>{formatPercent(area.averageModelDiscountPct, true)}</td></tr>)}</tbody></table></div></section>
         </div>
 
         <section className="methodology-callout"><Icon name="alert" size={22} /><div><strong>How to read this page</strong><p>{data.methodology.limitations.join(" ")}</p><code>{data.methodology.recommendationFormula}</code></div></section>

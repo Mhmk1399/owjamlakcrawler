@@ -111,6 +111,7 @@ export async function runScoringPipeline(
         modelFile: paths.model,
       },
       modelValidation: trained.model.validation,
+      valuationValidation: scored.summary.valuationValidation,
       summary: scored.summary,
       listings: scored.listings,
     }, "scored-listings document");

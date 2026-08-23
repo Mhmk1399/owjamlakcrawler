@@ -8,7 +8,7 @@ function listing(token, rank, score, band, neighborhood = "Area A") {
     rank,
     title: token,
     neighborhood,
-    scores: { recommendation: score, confidence: 80, band },
+    scores: { recommendation: score, confidence: 80, propertyQuality: 75, risk: 20, band },
     asking: { askingPricePerMeter: 100_000_000 },
     valuation: { modelDiscountPct: 10 },
     location: { accuracy: rank % 2 ? "exact" : "approximate" },
@@ -26,6 +26,7 @@ const document = {
   generatedAt: "2026-08-19T00:00:00.000Z",
   scoringVersion: "test-v1",
   modelValidation: { medianAbsolutePercentageError: 20 },
+  valuationValidation: { medianAbsolutePercentageError: 15, within20Percent: 65, within30Percent: 80, rSquaredLog: 0.75 },
   summary: {
     scoreDistribution: { minimum: 10, median: 50, maximum: 90 },
     exactCoordinateCount: 3,
@@ -48,4 +49,5 @@ test("scoring analytics creates exhaustive bands and histogram", () => {
   assert.equal(analytics.distributions.histogram.reduce((sum, bin) => sum + bin.count, 0), 5);
   assert.equal(analytics.coordinates.exactPercentage, 60);
   assert.equal(analytics.neighborhoods[0].count, 5);
+  assert.equal(analytics.valuationValidation.medianAbsolutePercentageError, 15);
 });

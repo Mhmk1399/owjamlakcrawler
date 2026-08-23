@@ -171,6 +171,8 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
           localPosition: item.scores.localPosition,
           confidence: item.scores.confidence,
           dataQuality: item.scores.dataQuality,
+          propertyQuality: item.scores.propertyQuality,
+          risk: item.scores.risk,
           modelDiscountPct: item.valuation.modelDiscountPct,
           nearbyDiscountPct: item.valuation.nearbyDiscountPct,
           askingPrice: item.asking.askingPrice,
@@ -195,6 +197,7 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
           limit,
           summary: document.summary,
           modelValidation: document.modelValidation,
+          valuationValidation: document.valuationValidation || document.summary?.valuationValidation,
           listings: filtered.slice(offset, offset + limit),
         });
       }

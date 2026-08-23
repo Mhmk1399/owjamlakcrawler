@@ -31,13 +31,22 @@
         "property": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["area", "rooms", "constructionYear", "floor", "totalFloors"],
+          "required": ["area", "rooms", "constructionYear", "floor", "totalFloors", "unitsPerFloor", "buildingAge", "floorRatio", "areaPerRoom", "isNewBuild", "isGroundFloor", "isBasement", "isTopFloor", "isSingleUnitFloor"],
           "properties": {
             "area": { "type": "number", "minimum": 20, "maximum": 1000 },
             "rooms": { "type": "number", "minimum": 0 },
             "constructionYear": { "type": "number", "minimum": 1300 },
             "floor": { "type": "number" },
-            "totalFloors": { "type": "number", "minimum": 1 }
+            "totalFloors": { "type": "number", "minimum": 1 },
+            "unitsPerFloor": { "type": "number", "minimum": 1 },
+            "buildingAge": { "type": "number", "minimum": 0 },
+            "floorRatio": { "type": "number" },
+            "areaPerRoom": { "type": "number", "exclusiveMinimum": 0 },
+            "isNewBuild": { "type": "boolean" },
+            "isGroundFloor": { "type": "boolean" },
+            "isBasement": { "type": "boolean" },
+            "isTopFloor": { "type": "boolean" },
+            "isSingleUnitFloor": { "type": "boolean" }
           }
         },
         "amenities": {

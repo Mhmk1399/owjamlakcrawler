@@ -269,6 +269,8 @@ const SCORE_FACTORS = [
   { key: "localPosition", label: "Local position", short: "Position", weight: 0.15, description: "Price-per-metre position inside the local comparable set" },
   { key: "confidence", label: "Confidence", short: "Confidence", weight: null, description: "Validation, comparable, coordinate and data-quality evidence" },
   { key: "dataQuality", label: "Data quality", short: "Quality", weight: null, description: "Penalty for explicitly imputed source fields" },
+  { key: "propertyQuality", label: "Property quality", short: "Property", weight: null, description: "Age, floor position, unit density and amenity quality; reported separately from value" },
+  { key: "risk", label: "Risk", short: "Risk", weight: null, inverse: true, description: "Higher means unusual price, disagreement, dispersion or incomplete evidence" },
 ];
 
 function scoreMetric(item, key) {
@@ -278,9 +280,10 @@ function scoreMetric(item, key) {
   return item.scores?.[key] ?? item.components?.[key];
 }
 
-function FactorScore({ value, weight }) {
+function FactorScore({ value, weight, inverse = false }) {
   if (!Number.isFinite(value)) return <span className="metric-empty">—</span>;
-  const tone = value >= 75 ? "high" : value >= 45 ? "medium" : "low";
+  const interpreted = inverse ? 100 - value : value;
+  const tone = interpreted >= 75 ? "high" : interpreted >= 45 ? "medium" : "low";
   return (
     <div className={`factor-score factor-score--${tone}`} title={weight ? `${decimal.format(value * weight)} weighted deal-value points` : `${value} points`}>
       <div><strong>{formatNumber(value)}</strong><small>{weight ? `+${decimal.format(value * weight)}` : "raw"}</small></div>
@@ -397,7 +400,7 @@ function Recommendations({ data }) {
       <SectionHeading
         kicker="Suggestion system"
         title="Ad scoring details"
-        description="Out-of-fold model value and nearby evidence create the deal score; confidence can only reduce the final recommendation."
+        description="A cross-fitted hedonic model and attribute-adjusted comparables create deal value; confidence and risk gates can only reduce the final recommendation."
         aside={<div className="coverage-summary"><strong>{formatNumber(data.summary?.scoreDistribution?.median ?? data.averageScore ?? 0)}</strong><span>median score</span></div>}
       />
       <div className="scoring-tools">
@@ -414,7 +417,7 @@ function Recommendations({ data }) {
               <th className="scoring-table__listing"><SortHeading column="listing">Ad</SortHeading></th>
               <th><SortHeading column="recommendation" title="Confidence-adjusted recommendation score">Final</SortHeading></th>
               {SCORE_FACTORS.map((factor) => (
-                <th key={factor.key} title={`${factor.description}; weight ${factor.weight * 100}%`}>
+                <th key={factor.key} title={`${factor.description}${factor.weight ? `; weight ${factor.weight * 100}%` : ""}`}>
                   <SortHeading column={factor.key}>{factor.short}{factor.weight && <small>{factor.weight * 100}% of deal</small>}</SortHeading>
                 </th>
               ))}
@@ -435,14 +438,14 @@ function Recommendations({ data }) {
                 </td>
                 <td><div className={`final-score final-score--${scoreMetric(item, "recommendation") >= 80 ? "high" : scoreMetric(item, "recommendation") >= 60 ? "medium" : "low"}`}>{formatNumber(scoreMetric(item, "recommendation"))}</div></td>
                 {SCORE_FACTORS.map((factor) => (
-                  <td key={factor.key}><FactorScore value={scoreMetric(item, factor.key)} weight={factor.weight} /></td>
+                  <td key={factor.key}><FactorScore value={scoreMetric(item, factor.key)} weight={factor.weight} inverse={factor.inverse} /></td>
                 ))}
                 <td><GapValue value={scoreMetric(item, "modelDiscountPct")} /></td>
                 <td><GapValue value={scoreMetric(item, "nearbyDiscountPct")} /></td>
                 <td>
                   <div className="evidence-cell">
                     <strong>{formatNumber(item.evidence?.comparableCount ?? item.prediction?.modelSampleCount)}</strong><span>{item.evidence ? "comparables" : "model samples"}</span>
-                    <small>{item.evidence ? `${formatPercent(item.evidence.modelValidationMedianErrorPct)} median error · out-of-fold` : `${formatNumber(item.nearby?.count)} nearby`}</small>
+                    <small>{item.evidence ? `${formatPercent(item.evidence.valuationValidationMedianErrorPct ?? item.evidence.modelValidationMedianErrorPct)} blended median error · cross-fitted` : `${formatNumber(item.nearby?.count)} nearby`}</small>
                   </div>
                 </td>
               </tr>

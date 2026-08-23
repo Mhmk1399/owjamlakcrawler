@@ -7,6 +7,8 @@ const FACTORS = [
   ["localPosition", "Local position", "15% of deal value", "A lower local price-per-metre percentile produces a higher score."],
   ["confidence", "Confidence", "Recommendation gate", "Model validation, comparable coverage, coordinate accuracy and data completeness."],
   ["dataQuality", "Data quality", "Confidence input", "Reduced when optional source fields had to be explicitly imputed."],
+  ["propertyQuality", "Property quality", "Separate signal", "Age, amenities, floor position and units per floor; it does not inflate the deal score."],
+  ["risk", "Risk", "Recommendation gate", "Higher means an extreme price, weak or dispersed evidence, model disagreement, or incomplete data.", true],
 ];
 
 function tone(value) {
@@ -14,7 +16,9 @@ function tone(value) {
 }
 
 function BooleanValue({ value }) {
-  return <span className={value ? "yes-value" : "no-value"}>{value ? "Yes" : "No"}</span>;
+  const known = value === 1 || value === 0 || typeof value === "boolean";
+  const enabled = value === 1 || value === true;
+  return <span className={enabled ? "yes-value" : "no-value"}>{known ? (enabled ? "Yes" : "No") : "Unknown"}</span>;
 }
 
 function PropertyFacts({ item }) {
@@ -23,13 +27,15 @@ function PropertyFacts({ item }) {
     ["Rooms", formatNumber(item.property.rooms)],
     ["Built", formatNumber(item.property.constructionYear)],
     ["Floor", `${formatNumber(item.property.floor)} / ${formatNumber(item.property.totalFloors)}`],
+    ["Units / floor", formatNumber(item.property.unitsPerFloor)],
+    ["Building age", `${formatNumber(item.property.buildingAge)} years`],
   ];
   return (
     <section className="panel detail-panel">
       <div className="compact-heading"><span>Property</span><h2>Source attributes</h2></div>
       <div className="fact-grid">{facts.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
       <div className="amenity-row">
-        {Object.entries(item.amenities || {}).map(([key, value]) => <div key={key}><BooleanValue value={Boolean(value)} /><span>{key}</span></div>)}
+        {Object.entries(item.amenities || {}).map(([key, value]) => <div key={key}><BooleanValue value={value} /><span>{key}</span></div>)}
       </div>
       <div className="coordinate-line"><Icon name="location" size={18} /><span>{item.location.latitude.toFixed(5)}, {item.location.longitude.toFixed(5)}</span><strong>{item.location.accuracy}</strong></div>
     </section>
@@ -39,15 +45,16 @@ function PropertyFacts({ item }) {
 function ScoreFactors({ item }) {
   return (
     <section className="panel detail-panel detail-panel--wide">
-      <div className="compact-heading"><span>Score anatomy</span><h2>Every input to the recommendation</h2><p>Deal value is built first; confidence can reduce it, but never increase it.</p></div>
+      <div className="compact-heading"><span>Score anatomy</span><h2>Every input to the recommendation</h2><p>Deal value is built first. Confidence and risk can only reduce it; property quality remains a separate, inspectable signal.</p></div>
       <div className="factor-grid">
         <article className="factor-card factor-card--primary"><span>Deal value</span><strong>{item.scores.dealValue}</strong><ScoreBar value={item.scores.dealValue} tone={tone(item.scores.dealValue)} /><p>Weighted result before the confidence gate.</p></article>
-        {FACTORS.map(([key, label, weight, description]) => <article className="factor-card" key={key}><div><span>{label}</span><small>{weight}</small></div><strong>{item.scores[key]}</strong><ScoreBar value={item.scores[key]} tone={tone(item.scores[key])} /><p>{description}</p></article>)}
+        {FACTORS.map(([key, label, weight, description, inverse]) => <article className="factor-card" key={key}><div><span>{label}</span><small>{weight}</small></div><strong>{item.scores[key]}</strong><ScoreBar value={item.scores[key]} tone={tone(inverse ? 100 - item.scores[key] : item.scores[key])} /><p>{description}</p></article>)}
       </div>
       <div className="formula-box">
         <div><span>Deal value</span><code>{item.scores.modelValue} × 45% + {item.scores.nearbyValue} × 40% + {item.scores.localPosition} × 15% = {item.scores.dealValue}</code></div>
         <div><span>Confidence gate</span><code>55% + {item.scores.confidence} × 45% = {formatPercent(item.formula.appliedConfidenceGate * 100)}</code></div>
-        <div><span>Final</span><code>{item.scores.dealValue} × {item.formula.appliedConfidenceGate.toFixed(3)} = {item.formula.rawRecommendation.toFixed(2)} → {item.scores.recommendation}</code></div>
+        <div><span>Risk gate</span><code>100% − {item.scores.risk} × 40% = {formatPercent(item.formula.appliedRiskGate * 100)}</code></div>
+        <div><span>Final</span><code>{item.scores.dealValue} × {item.formula.appliedConfidenceGate.toFixed(3)} × {item.formula.appliedRiskGate.toFixed(3)} = {item.formula.rawRecommendation.toFixed(2)} → {item.scores.recommendation}</code></div>
       </div>
     </section>
   );
@@ -57,9 +64,9 @@ function Comparables({ item }) {
   const rows = item.evidence.comparables || [];
   return (
     <section className="panel detail-panel detail-panel--wide">
-      <div className="compact-heading"><span>Nearby evidence</span><h2>{formatNumber(item.evidence.comparableCount)} robust comparables within {formatNumber(item.evidence.comparableRadiusMeters)} m</h2><p>The nearest twelve used records are shown. Area differs by at most 30%, rooms by at most one, and statistical price outliers are removed when enough evidence remains.</p></div>
-      <div className="table-wrap comparable-table-wrap"><table className="comparable-table"><thead><tr><th>Comparable ad</th><th>Distance</th><th>Area</th><th>Rooms</th><th>Asking</th><th>Price / m²</th><th>This ad vs it</th></tr></thead><tbody>
-        {rows.map((row) => <tr key={row.token}><td><a href={row.url} target="_blank" rel="noreferrer"><strong dir="auto">{row.title}</strong><small dir="auto">{row.neighborhood} · {row.coordinateAccuracy}</small></a></td><td>{formatNumber(row.distanceMeters)} m</td><td>{formatNumber(row.area)} m²</td><td>{formatNumber(row.rooms)}</td><td>{formatMoney(row.askingPrice)}</td><td>{formatMoney(row.askingPricePerMeter)}</td><td className={row.subjectPriceDifferencePct <= 0 ? "cell-good" : "cell-warn"}>{formatPercent(row.subjectPriceDifferencePct, true)}</td></tr>)}
+      <div className="compact-heading"><span>Nearby evidence</span><h2>{formatNumber(item.evidence.comparableCount)} attribute-adjusted comparables within {formatNumber(item.evidence.comparableRadiusMeters)} m</h2><p>The twelve strongest matches are shown. Similarity includes location, area, age, rooms, relative floor, unit density and amenities. Each comparable price is normalized to this property's attributes before aggregation.</p></div>
+      <div className="table-wrap comparable-table-wrap"><table className="comparable-table"><thead><tr><th>Comparable ad</th><th>Match</th><th>Distance</th><th>Property</th><th>Asking</th><th>Raw / m²</th><th>Adjusted / m²</th><th>This ad vs adjusted</th></tr></thead><tbody>
+        {rows.map((row) => <tr key={row.token}><td><a href={row.url} target="_blank" rel="noreferrer"><strong dir="auto">{row.title}</strong><small dir="auto">{row.neighborhood} · {row.coordinateAccuracy}</small></a></td><td>{formatPercent(row.similarity)}</td><td>{formatNumber(row.distanceMeters)} m</td><td><strong>{formatNumber(row.area)} m² · {formatNumber(row.rooms)} rooms</strong><small>floor {formatNumber(row.floor)}/{formatNumber(row.totalFloors)} · {row.elevator === 1 ? "lift" : row.elevator === 0 ? "no lift" : "lift unknown"} · {row.parking === 1 ? "parking" : row.parking === 0 ? "no parking" : "parking unknown"}</small></td><td>{formatMoney(row.askingPrice)}</td><td>{formatMoney(row.askingPricePerMeter)}</td><td>{formatMoney(row.adjustedPricePerMeter)}</td><td className={row.subjectAdjustedPriceDifferencePct <= 0 ? "cell-good" : "cell-warn"}>{formatPercent(row.subjectAdjustedPriceDifferencePct, true)}</td></tr>)}
       </tbody></table></div>
       {!rows.length && <p className="empty-note">No nearby comparable passed the selection rules for this listing.</p>}
     </section>
@@ -100,7 +107,7 @@ export default function ScoreDetailPage({ token }) {
         <div className="detail-grid">
           <ScoreFactors item={item} />
           <PropertyFacts item={item} />
-          <section className="panel detail-panel"><div className="compact-heading"><span>Evidence quality</span><h2>Why confidence is {item.scores.confidence}</h2></div><dl className="evidence-list"><div><dt>Out-of-fold prediction</dt><dd>{item.evidence.predictionIsOutOfFold ? "Yes" : "No"}</dd></div><div><dt>Validation median error</dt><dd>{formatPercent(item.evidence.modelValidationMedianErrorPct)}</dd></div><div><dt>Validation R² (log)</dt><dd>{item.evidence.modelValidationRSquaredLog}</dd></div><div><dt>Nearby records</dt><dd>{formatNumber(item.evidence.comparableCount)}</dd></div><div><dt>Removed outliers</dt><dd>{formatNumber(item.evidence.removedComparableOutliers)}</dd></div><div><dt>Nearby/model blend</dt><dd>{formatPercent(item.valuation.nearbyBlendWeightPct)} / {formatPercent(100 - item.valuation.nearbyBlendWeightPct)}</dd></div></dl></section>
+          <section className="panel detail-panel"><div className="compact-heading"><span>Evidence quality</span><h2>Why confidence is {item.scores.confidence}</h2></div><dl className="evidence-list"><div><dt>Cross-fitted blended median error</dt><dd>{formatPercent(data.valuationValidation.medianAbsolutePercentageError)}</dd></div><div><dt>Blended validation R² (log)</dt><dd>{data.valuationValidation.rSquaredLog}</dd></div><div><dt>Base model median error</dt><dd>{formatPercent(item.evidence.modelValidationMedianErrorPct)}</dd></div><div><dt>Nearby records</dt><dd>{formatNumber(item.evidence.comparableCount)}</dd></div><div><dt>Average comparable match</dt><dd>{formatPercent(item.evidence.averageComparableSimilarity)}</dd></div><div><dt>Adjusted-price dispersion</dt><dd>{formatPercent(item.evidence.adjustedComparableDispersionPct)}</dd></div><div><dt>Comparable evidence strength</dt><dd>{formatPercent(item.evidence.comparableEvidenceStrength)}</dd></div><div><dt>Removed outliers</dt><dd>{formatNumber(item.evidence.removedComparableOutliers)}</dd></div><div><dt>Nearby/model blend</dt><dd>{formatPercent(item.valuation.nearbyBlendWeightPct)} / {formatPercent(100 - item.valuation.nearbyBlendWeightPct)}</dd></div></dl></section>
           <section className="panel detail-panel"><div className="compact-heading"><span>Interpretation</span><h2>What the machine observed</h2></div><ul className="explanation-list">{item.explanations.map((text) => <li key={text}><Icon name="check" size={17} />{text}</li>)}</ul>{item.warnings.length > 0 && <div className="warning-box"><Icon name="alert" size={18} /><div><strong>Warnings</strong><span>{item.warnings.join(" · ")}</span></div></div>}<div className="cleaning-note"><strong>{item.cleaning.imputationCount}</strong><span>imputed fields</span><small>{item.evidence.imputedFields.join(", ") || "No fields were imputed for this ad."}</small></div></section>
           <Comparables item={item} />
         </div>

@@ -3,13 +3,14 @@
   "$id": "https://owj.local/schemas/scored-listings.schema.json",
   "title": "Owj scored apartment listings",
   "type": "object",
-  "required": ["schemaVersion", "scoringVersion", "generatedAt", "source", "modelValidation", "summary", "listings"],
+  "required": ["schemaVersion", "scoringVersion", "generatedAt", "source", "modelValidation", "valuationValidation", "summary", "listings"],
   "properties": {
     "schemaVersion": { "const": "1.0.0" },
     "scoringVersion": { "type": "string", "minLength": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
     "source": { "type": "object" },
     "modelValidation": { "type": "object" },
+    "valuationValidation": { "type": "object" },
     "summary": { "type": "object" },
     "listings": {
       "type": "array",
@@ -22,7 +23,7 @@
           "valuation": { "type": "object" },
           "scores": {
             "type": "object",
-            "required": ["recommendation", "dealValue", "modelValue", "nearbyValue", "localPosition", "confidence", "dataQuality", "band"],
+            "required": ["recommendation", "dealValue", "modelValue", "nearbyValue", "localPosition", "confidence", "dataQuality", "propertyQuality", "risk", "band"],
             "properties": {
               "recommendation": { "type": "integer", "minimum": 0, "maximum": 100 },
               "dealValue": { "type": "integer", "minimum": 0, "maximum": 100 },
@@ -31,6 +32,8 @@
               "localPosition": { "type": "integer", "minimum": 0, "maximum": 100 },
               "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
               "dataQuality": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "propertyQuality": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "risk": { "type": "integer", "minimum": 0, "maximum": 100 },
               "band": { "enum": ["strong-value", "promising", "fair", "weak-value"] }
             }
           },

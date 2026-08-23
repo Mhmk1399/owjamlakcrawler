@@ -65,6 +65,10 @@ test("cleaner rejects unscorable rows and records every optional imputation", ()
   assert.equal(result.rejected.length, 1);
   assert.match(result.rejected[0].reasons.join(" "), /coordinates/);
   assert.ok(result.records[0].cleaning.imputedFields.includes("property.totalFloors"));
+  assert.ok(result.records[0].cleaning.imputedFields.includes("property.unitsPerFloor"));
+  assert.equal(result.records[0].property.unitsPerFloor, 2);
+  assert.ok(Number.isFinite(result.records[0].property.floorRatio));
+  assert.equal(typeof result.records[0].cleaning.missingIndicators.totalFloors, "boolean");
   assert.doesNotMatch(JSON.stringify(result.records), /:null/);
 });
 
@@ -82,6 +86,10 @@ test("location-aware model uses out-of-fold predictions and produces distributed
   assert.ok(Array.isArray(scored.listings[0].evidence.comparables));
   assert.equal(scored.listings[0].formula.dealWeights.modelValue, 0.45);
   assert.ok(scored.listings[0].formula.appliedConfidenceGate >= 0.55);
+  assert.ok(scored.listings[0].formula.appliedRiskGate >= 0.6);
+  assert.ok(Number.isFinite(scored.listings[0].scores.propertyQuality));
+  assert.ok(Number.isFinite(scored.listings[0].scores.risk));
+  assert.ok(Number.isFinite(scored.summary.valuationValidation.medianAbsolutePercentageError));
   assert.ok(new Set(scored.listings.map((item) => item.scores.recommendation)).size > 10);
   assert.doesNotMatch(JSON.stringify(scored), /:null/);
 });
@@ -108,6 +116,9 @@ test("callback-driven pipeline writes all four no-null scoring documents", async
   assert.ok(eventTypes.includes("clean.complete"));
   assert.ok(eventTypes.includes("model.complete"));
   assert.ok(eventTypes.includes("score.complete"));
+  const scoredDocument = JSON.parse(await fs.readFile(paths.scoredListings, "utf8"));
+  assert.equal(scoredDocument.scoringVersion, "similarity-adjusted-value-score-v3");
+  assert.ok(scoredDocument.valuationValidation.sampleCount > 0);
   for (const file of Object.values(paths).filter((file) => file !== paths.input)) {
     const contents = await fs.readFile(file, "utf8");
     assert.doesNotMatch(contents, /: null/);

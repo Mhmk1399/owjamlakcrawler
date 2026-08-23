@@ -5,45 +5,106 @@ import {
   medianAbsoluteDeviation,
 } from "./statistics.js";
 
-export const PRICE_MODEL_VERSION = "geo-ridge-log-ppm-v1";
+export const PRICE_MODEL_VERSION = "geo-hedonic-ridge-log-ppm-v2";
+
+const SPATIAL_ANCHORS = [35.55, 35.7, 35.85].flatMap((latitude) => (
+  [51.1, 51.3, 51.5, 51.7].map((longitude) => ({ latitude, longitude }))
+));
 
 const FEATURE_NAMES = [
   "logArea",
+  "logAreaSquared",
+  "areaAbove60",
+  "areaAbove100",
   "rooms",
-  "constructionYear",
+  "roomsSquared",
+  "areaPerRoom",
+  "buildingAge",
+  "buildingAgeSquared",
+  "isNewBuild",
   "floor",
   "totalFloors",
+  "floorRatio",
+  "isGroundFloor",
+  "isBasement",
+  "isTopFloor",
+  "unitsPerFloor",
+  "isSingleUnitFloor",
   "elevator",
   "parking",
   "storage",
   "balcony",
+  "elevatorFloorInteraction",
+  "parkingAreaInteraction",
   "latitude",
   "longitude",
   "latitudeSquared",
   "longitudeSquared",
   "latitudeLongitude",
   "approximateLocation",
+  "missingRooms",
+  "missingConstructionYear",
+  "missingFloor",
+  "missingTotalFloors",
+  "missingUnitsPerFloor",
+  "missingElevator",
+  "missingParking",
+  "missingStorage",
+  "missingBalcony",
+  ...SPATIAL_ANCHORS.map((_, index) => `spatialRbf${index + 1}`),
 ];
 
 function featureVector(listing) {
   const latitude = listing.location.latitude;
   const longitude = listing.location.longitude;
+  const logArea = Math.log(listing.property.area);
+  const missing = listing.cleaning.missingIndicators;
+  const spatial = SPATIAL_ANCHORS.map((anchor) => {
+    const latitudeDistance = (latitude - anchor.latitude) / 0.075;
+    const longitudeDistance = (longitude - anchor.longitude) / 0.09;
+    return Math.exp(-0.5 * (latitudeDistance ** 2 + longitudeDistance ** 2));
+  });
   return [
-    Math.log(listing.property.area),
+    logArea,
+    logArea ** 2,
+    Math.max(0, listing.property.area - 60),
+    Math.max(0, listing.property.area - 100),
     listing.property.rooms,
-    listing.property.constructionYear,
+    listing.property.rooms ** 2,
+    listing.property.areaPerRoom,
+    listing.property.buildingAge,
+    listing.property.buildingAge ** 2,
+    listing.property.isNewBuild ? 1 : 0,
     listing.property.floor,
     listing.property.totalFloors,
+    listing.property.floorRatio,
+    listing.property.isGroundFloor ? 1 : 0,
+    listing.property.isBasement ? 1 : 0,
+    listing.property.isTopFloor ? 1 : 0,
+    listing.property.unitsPerFloor,
+    listing.property.isSingleUnitFloor ? 1 : 0,
     listing.amenities.elevator,
     listing.amenities.parking,
     listing.amenities.storage,
     listing.amenities.balcony,
+    listing.amenities.elevator * Math.max(0, listing.property.floor),
+    listing.amenities.parking * logArea,
     latitude,
     longitude,
     latitude * latitude,
     longitude * longitude,
     latitude * longitude,
     listing.location.accuracy === "approximate" ? 1 : 0,
+    missing.rooms ? 1 : 0,
+    missing.constructionYear ? 1 : 0,
+    missing.floor ? 1 : 0,
+    missing.totalFloors ? 1 : 0,
+    missing.unitsPerFloor ? 1 : 0,
+    missing.elevator ? 1 : 0,
+    missing.parking ? 1 : 0,
+    missing.storage ? 1 : 0,
+    missing.balcony ? 1 : 0,
+    ...spatial,
   ];
 }
 
@@ -181,8 +242,8 @@ export function trainCrossValidatedPriceModel(
   records,
   { folds = 5, lambda = 10, onEvent = () => {} } = {},
 ) {
-  if (records.length < Math.max(100, FEATURE_NAMES.length * folds)) {
-    throw new Error(`At least ${Math.max(100, FEATURE_NAMES.length * folds)} cleaned listings are required`);
+  if (records.length < 120) {
+    throw new Error("At least 120 cleaned listings are required");
   }
   const foldCount = clamp(Math.round(folds), 3, 10);
   const predictions = new Map();

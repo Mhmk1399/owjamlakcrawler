@@ -38,11 +38,15 @@ medians or explicit neutral amenity values, and every imputed field is recorded.
 The generated scoring-ready and scored documents are checked recursively and
 cannot contain `null` or `undefined` values.
 
-The price model uses latitude and longitude as real features and produces a
-deterministic five-fold out-of-sample prediction for every listing. A separate
-robust nearby-comparable benchmark uses distance, property size, room count,
-coordinate accuracy, and median-deviation outlier removal. Confidence can only
-reduce the deal-value score; it cannot make an expensive listing look valuable.
+The hedonic price model produces a deterministic five-fold out-of-sample
+prediction for every listing. It includes nonlinear size and age effects,
+relative floor position, unit density, amenities, missingness, amenity
+interactions, coordinate accuracy, and spatial basis features across Tehran.
+A separate comparable benchmark ranks candidates by location, area, age,
+rooms, floor, amenities, and unit density, then adjusts each comparable to the
+subject property's attributes before robust aggregation. Confidence and risk
+gates can only reduce deal value; property quality is reported separately so a
+desirable but overpriced apartment is not mislabeled as a bargain.
 
 Generated files:
 
@@ -74,8 +78,8 @@ npm run start:analytics
 
 Open `http://127.0.0.1:4567/` for the React operations dashboard. It refreshes
 every 30 seconds and exposes the exact combined payload in a collapsible JSON
-viewer. The score-detail table exposes every recommended ad's six scoring
-factors, their weighted contributions, benchmark price gaps, and supporting
+viewer. The score-detail table exposes every recommended ad's value, quality,
+risk and confidence factors, their weighted contributions, benchmark price gaps, and supporting
 sample counts. Select an ad to open `/listing/:token`, which explains its price
 benchmarks, formula, confidence, cleaning history, property inputs, and nearby
 comparables. Open `/score-analytics` for validation, distributions, score bands,

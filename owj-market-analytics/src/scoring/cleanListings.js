@@ -1,6 +1,6 @@
 import { median } from "./statistics.js";
 
-export const CLEANING_VERSION = "scoring-ready-v1";
+export const CLEANING_VERSION = "scoring-ready-v2";
 
 const LIMITS = Object.freeze({
   area: [20, 1_000],
@@ -12,6 +12,7 @@ const LIMITS = Object.freeze({
   constructionYear: [1_300, 1_500],
   floor: [-5, 200],
   totalFloors: [1, 200],
+  unitsPerFloor: [1, 100],
 });
 
 function finite(value) {
@@ -27,7 +28,9 @@ function text(value, fallback) {
 }
 
 function medianOr(values, fallback) {
-  const value = median(values.filter(Number.isFinite));
+  const valid = values.filter(Number.isFinite);
+  if (!valid.length) return fallback;
+  const value = median(valid);
   return Number.isFinite(value) ? value : fallback;
 }
 
@@ -72,6 +75,10 @@ function rejectReasons(listing) {
 function noNullWalk(value, path, found) {
   if (value === null || value === undefined) {
     found.push(path);
+    return;
+  }
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    found.push(`${path}(non-finite)`);
     return;
   }
   if (Array.isArray(value)) {
@@ -125,6 +132,11 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
       ? item.property.totalFloors
       : undefined
   ), 4);
+  const unitsPerFloor = fieldMedianByArea(candidates, (item) => (
+    within(item.property?.unitsPerFloor, LIMITS.unitsPerFloor)
+      ? item.property.unitsPerFloor
+      : undefined
+  ), 2);
 
   const cleaned = candidates.map((listing, index) => {
     const imputedFields = [];
@@ -160,6 +172,14 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
       Math.round(totalFloors.forArea(area)),
     );
     cleanTotalFloors = Math.max(1, cleanFloor, cleanTotalFloors);
+    const rawUnitsPerFloor = within(listing.property?.unitsPerFloor, LIMITS.unitsPerFloor)
+      ? listing.property.unitsPerFloor
+      : undefined;
+    const cleanUnitsPerFloor = impute(
+      "property.unitsPerFloor",
+      rawUnitsPerFloor,
+      Math.round(unitsPerFloor.forArea(area)),
+    );
 
     const amenity = (key) => {
       const value = listing.amenities?.[key];
@@ -168,6 +188,8 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
       return 0.5;
     };
     const accuracy = listing.coordinates.accuracy === "exact" ? "exact" : "approximate";
+    const buildingAge = Math.max(0, 1_405 - cleanYear);
+    const floorRatio = Math.max(-1, Math.min(2, cleanFloor / cleanTotalFloors));
     const record = {
       schemaVersion: "1.0.0",
       cleaningVersion: CLEANING_VERSION,
@@ -181,6 +203,15 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
         constructionYear: cleanYear,
         floor: cleanFloor,
         totalFloors: cleanTotalFloors,
+        unitsPerFloor: cleanUnitsPerFloor,
+        buildingAge,
+        floorRatio: Number(floorRatio.toFixed(4)),
+        areaPerRoom: Number((area / Math.max(1, cleanRooms)).toFixed(2)),
+        isNewBuild: buildingAge <= 1,
+        isGroundFloor: cleanFloor === 0,
+        isBasement: cleanFloor < 0,
+        isTopFloor: rawTotalFloors !== undefined && cleanFloor >= rawTotalFloors,
+        isSingleUnitFloor: cleanUnitsPerFloor === 1,
       },
       amenities: {
         elevator: amenity("elevator"),
@@ -205,6 +236,7 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
       },
       source: {
         qualityScore: Number.isFinite(listing.quality?.score) ? listing.quality.score : 0,
+        imageCount: Number.isFinite(listing.imageCount) ? listing.imageCount : 0,
         missingFields: Array.isArray(listing.quality?.missingFields)
           ? listing.quality.missingFields.map(String)
           : [],
@@ -215,6 +247,17 @@ export function cleanListings(listings, { onEvent = () => {} } = {}) {
         imputed: imputedFields.length > 0,
         imputedFields: [...new Set(imputedFields)].sort(),
         imputationCount: [...new Set(imputedFields)].length,
+        missingIndicators: {
+          rooms: !within(listing.property?.rooms, LIMITS.rooms),
+          constructionYear: !within(listing.property?.constructionYear, LIMITS.constructionYear),
+          floor: !within(listing.property?.floor, LIMITS.floor),
+          totalFloors: rawTotalFloors === undefined,
+          unitsPerFloor: rawUnitsPerFloor === undefined,
+          elevator: typeof listing.amenities?.elevator !== "boolean",
+          parking: typeof listing.amenities?.parking !== "boolean",
+          storage: typeof listing.amenities?.storage !== "boolean",
+          balcony: typeof listing.amenities?.balcony !== "boolean",
+        },
       },
     };
     if ((index + 1) % 500 === 0) {

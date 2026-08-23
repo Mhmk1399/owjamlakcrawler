@@ -20,6 +20,7 @@ export function buildScoreDetail(document, token) {
     generatedAt: document.generatedAt,
     scoringVersion: document.scoringVersion,
     modelValidation: document.modelValidation,
+    valuationValidation: document.valuationValidation || document.summary?.valuationValidation || document.modelValidation,
     population: {
       total,
       rank: listing.rank,
@@ -68,9 +69,12 @@ export function buildScoringAnalytics(document, report = {}) {
     count: rows.length,
     averageScore: round(average(rows.map((item) => item.scores.recommendation)), 1),
     averageConfidence: round(average(rows.map((item) => item.scores.confidence)), 1),
+    averagePropertyQuality: round(average(rows.map((item) => item.scores.propertyQuality)), 1),
+    averageRisk: round(average(rows.map((item) => item.scores.risk)), 1),
     averageAskingPricePerMeter: Math.round(average(rows.map((item) => item.asking.askingPricePerMeter))),
     averageModelDiscountPct: round(average(rows.map((item) => item.valuation.modelDiscountPct)), 1),
     strongValueCount: rows.filter((item) => item.scores.band === "strong-value").length,
+    highRiskCount: rows.filter((item) => item.scores.risk >= 55).length,
   })).filter((item) => item.count >= 5)
     .sort((left, right) => right.count - left.count || right.averageScore - left.averageScore)
     .slice(0, 30);
@@ -84,10 +88,14 @@ export function buildScoringAnalytics(document, report = {}) {
     scoringVersion: document?.scoringVersion || "unknown",
     total,
     modelValidation: document?.modelValidation || {},
+    valuationValidation: document?.valuationValidation || document?.summary?.valuationValidation || document?.modelValidation || {},
     distributions: {
       score: summary.scoreDistribution || {},
       dealValue: summary.dealValueDistribution || {},
       confidence: summary.confidenceDistribution || {},
+      propertyQuality: summary.propertyQualityDistribution || {},
+      risk: summary.riskDistribution || {},
+      highRiskCount: summary.highRiskCount || 0,
       histogram: bins,
       bands,
     },
@@ -108,8 +116,8 @@ export function buildScoringAnalytics(document, report = {}) {
     neighborhoods,
     methodology: {
       target: "Public asking price per square metre",
-      validation: "Deterministic five-fold out-of-fold cross-validation",
-      recommendationFormula: "deal value × (0.55 + confidence × 0.45)",
+      validation: "Five-fold cross-fitted model with subject-excluded adjusted comparables",
+      recommendationFormula: "deal value × confidence gate × risk gate",
       limitations: [
         "Divar asking prices are not verified completed sale prices.",
         "Approximate coordinates represent privacy-shifted locations and reduce confidence.",
