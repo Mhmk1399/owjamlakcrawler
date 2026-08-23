@@ -9,6 +9,7 @@
     "start:crawler": "node src/index.js",
     "start:bot": "npm --prefix owj-token-bot start",
     "start:analytics": "npm --prefix owj-market-analytics start",
+    "start:analytics-dashboard": "npm --prefix owj-market-analytics start",
     "dev:analytics-dashboard": "npm --prefix owj-market-analytics run dashboard:dev",
     "build:analytics-dashboard": "npm --prefix owj-market-analytics run dashboard:build",
     "score:analytics": "npm --prefix owj-market-analytics run score",

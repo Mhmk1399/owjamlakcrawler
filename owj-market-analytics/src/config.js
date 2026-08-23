@@ -20,7 +20,7 @@ export const config = {
   serviceRoot,
   host: process.env.ANALYTICS_HOST || "127.0.0.1",
   port: integer(process.env.ANALYTICS_PORT, 4567, 1, 65535),
-  autoCrawl: bool(process.env.ANALYTICS_AUTO_CRAWL, true),
+  autoCrawl: bool(process.env.ANALYTICS_AUTO_CRAWL, false),
   crawlIntervalMs: integer(
     process.env.ANALYTICS_CRAWL_INTERVAL_MS,
     21_600_000,

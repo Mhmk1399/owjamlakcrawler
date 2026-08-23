@@ -13,8 +13,19 @@ async function readJson(file, fallback) {
 async function writeJsonAtomic(file, value) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(temporary, JSON.stringify(value, null, 2), "utf8");
-  await fs.rename(temporary, file);
+  const payload = JSON.stringify(value, null, 2);
+  const retryableCodes = new Set(["EBUSY", "EACCES", "EPERM"]);
+  const maxAttempts = 6;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await fs.writeFile(temporary, payload, "utf8");
+      await fs.rename(temporary, file);
+      return;
+    } catch (error) {
+      if (!retryableCodes.has(error.code) || attempt === maxAttempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
+    }
+  }
 }
 
 function safeToken(token) {
