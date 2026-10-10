@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /* ──────────────────────── Formatters (unchanged logic) ──────────────────────── */
 const number = new Intl.NumberFormat("fa-IR");
@@ -2001,9 +2001,12 @@ export default function AnalyticsDashboard({
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const requestInFlight = useRef(false);
 
   const load = useCallback(
     async ({ quiet = false } = {}) => {
+      if (requestInFlight.current) return;
+      requestInFlight.current = true;
       if (!quiet) setRefreshing(true);
       try {
         const response = await fetch(endpoint, {
@@ -2019,6 +2022,7 @@ export default function AnalyticsDashboard({
       } catch (caught) {
         setError(caught.message || "Unknown dashboard error");
       } finally {
+        requestInFlight.current = false;
         setRefreshing(false);
       }
     },

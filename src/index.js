@@ -46,6 +46,32 @@ async function writeDiagnostics(diagnostics) {
   await fs.rename(temporary, destination);
 }
 
+function compactPhoneResult(detail) {
+  const phoneNumbers = [
+    detail.contact?.authenticatedPhone,
+    ...(detail.contact?.publicPhones || []),
+    ...(detail.contact?.publicLandlines || []),
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  if (phoneNumbers.length === 0) return null;
+  return {
+    token: detail.token,
+    title: detail.title,
+    phoneNumbers: [...new Set(phoneNumbers)],
+    url: detail.url,
+  };
+}
+
+async function writePhoneResults(results) {
+  await fs.mkdir("data", { recursive: true });
+  const destination = "data/crawler-phone-results.json";
+  const temporary = `${destination}.tmp`;
+  await fs.writeFile(temporary, JSON.stringify(results, null, 2), "utf8");
+  await fs.rename(temporary, destination);
+}
+
 async function discoverListings(searchPage) {
   const targetUrl = canonicalizeDivarUrl(process.env.TARGET_LISTING_URL);
   const diagnostics = createSearchDiagnostics();
@@ -131,6 +157,8 @@ async function main() {
     authenticationRequired: 0,
     noContactInformation: 0,
   };
+  const phoneResults = [];
+  await writePhoneResults(phoneResults);
 
   const stats = await processListings({
     context,
@@ -146,6 +174,12 @@ async function main() {
       if (detail.contact?.contactButtonAvailable) contactSummary.contactButtons += 1;
       if (detail.contact?.status === "authentication-required") contactSummary.authenticationRequired += 1;
       if (detail.contact?.status === "no-contact-information") contactSummary.noContactInformation += 1;
+      const phoneResult = compactPhoneResult(detail);
+      if (phoneResult) {
+        phoneResults.push(phoneResult);
+        await writePhoneResults(phoneResults);
+        console.log(`[PHONE] ${phoneResult.phoneNumbers.join(", ")} | ${phoneResult.token} | ${phoneResult.title}`);
+      }
     },
     onFailure: saveFailureScreenshot,
     onProgress: printProgress,
@@ -158,6 +192,7 @@ async function main() {
   } else if (config.crawler.generateCombinedJson) {
     console.warn("[EXPORT] no valid token files; preserving the existing combined JSON");
   }
+  console.log(`[PHONE RESULTS] ${phoneResults.length} ad(s) saved to data/crawler-phone-results.json`);
   printWorkerReport(stats, contactSummary, session);
   if (stats.failed > 0) {
     await sendCrawlerAlert(

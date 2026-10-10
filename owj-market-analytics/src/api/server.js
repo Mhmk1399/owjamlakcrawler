@@ -1,5 +1,5 @@
 import http from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { buildDashboardPayload } from "./dashboard.js";
 import { buildScoreDetail, buildScoringAnalytics } from "./scoringViews.js";
@@ -29,6 +29,38 @@ async function readJson(file, fallback = null) {
     if (error.code === "ENOENT") return fallback;
     throw error;
   }
+}
+
+function createCachedJsonReader(file, fallback = null) {
+  let cachedSignature = null;
+  let cachedValue = fallback;
+  let pending = null;
+
+  return async function readCachedJson() {
+    let metadata;
+    try {
+      metadata = await stat(file);
+    } catch (error) {
+      if (error.code === "ENOENT") return fallback;
+      throw error;
+    }
+
+    const signature = `${metadata.mtimeMs}:${metadata.size}`;
+    if (signature === cachedSignature) return cachedValue;
+    if (pending?.signature === signature) return pending.promise;
+
+    const promise = readJson(file, fallback)
+      .then((value) => {
+        cachedSignature = signature;
+        cachedValue = value;
+        return value;
+      })
+      .finally(() => {
+        if (pending?.promise === promise) pending = null;
+      });
+    pending = { signature, promise };
+    return promise;
+  };
 }
 
 async function sendStatic(response, file, type) {
@@ -70,6 +102,7 @@ function externalListing(listing) {
 
 export function createAnalyticsServer({ config, store, analytics, crawler, logger }) {
   let recommendationAnalysisCache = { key: null, value: new Map() };
+  const readScoredDocument = createCachedJsonReader(config.paths.scoredListings, null);
   const server = http.createServer(async (request, response) => {
     const startedAt = Date.now();
     const requestId = randomUUID();
@@ -114,13 +147,17 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
         const [analyticsDocument, savedServiceState, scoredDocument] = await Promise.all([
           readJson(config.paths.analytics, analytics.publicSnapshot()),
           readJson(config.paths.serviceState, {}),
-          readJson(config.paths.scoredListings, null),
+          readScoredDocument(),
         ]);
         const liveCrawl = crawler.snapshot();
         const dashboardCrawl = liveCrawl.status === "idle" && savedServiceState?.crawl
           ? savedServiceState.crawl
           : liveCrawl;
-        const sourceRecommendations = analyticsDocument.recommendations || analytics.recommendations(100);
+        const sourceRecommendations = Array.isArray(analyticsDocument.recommendations)
+          ? analyticsDocument.recommendations
+          : scoredDocument?.listings
+            ? []
+            : analytics.recommendations(100);
         if (!scoredDocument?.listings) {
           const analysisCacheKey = [
             analyticsDocument.generatedAt || analyticsDocument.updatedAt || "unknown",
@@ -149,7 +186,7 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
       }
 
       if (request.method === "GET" && url.pathname === "/scores") {
-        const document = await readJson(config.paths.scoredListings, null);
+        const document = await readScoredDocument();
         if (!document?.listings) {
           return sendJson(response, 404, {
             error: "scores-not-generated",
@@ -204,7 +241,7 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
 
       const scoreDetailMatch = url.pathname.match(/^\/score-details\/([A-Za-z0-9_-]+)$/);
       if (request.method === "GET" && scoreDetailMatch) {
-        const document = await readJson(config.paths.scoredListings, null);
+        const document = await readScoredDocument();
         if (!document?.listings) {
           return sendJson(response, 404, { error: "scores-not-generated" });
         }
@@ -216,7 +253,7 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
 
       if (request.method === "GET" && url.pathname === "/score-analytics-data") {
         const [document, report] = await Promise.all([
-          readJson(config.paths.scoredListings, null),
+          readScoredDocument(),
           readJson(config.paths.scoringReport, {}),
         ]);
         if (!document?.listings) {

@@ -7,6 +7,7 @@
     "test": "node --test test/*.test.js",
     "start": "node scripts/start-all.js",
     "start:crawler": "node src/index.js",
+    "test:crawler:phones": "CRAWL_MODE=latest MAX_LISTINGS=3 DETAIL_CONCURRENCY=1 GENERATE_COMBINED_JSON=false node src/index.js",
     "start:bot": "npm --prefix owj-token-bot start",
     "start:analytics": "npm --prefix owj-market-analytics start",
     "start:analytics-dashboard": "npm --prefix owj-market-analytics start",
