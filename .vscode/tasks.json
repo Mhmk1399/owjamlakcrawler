@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Token service: start",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/token"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "owj-token-service",
+        "pattern": {
+          "regexp": "^(.*)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*owj-device-token-service.*start.*",
+          "endsPattern": ".*token-service.*listening.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Token service: test",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/token"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: build debug APK",
+      "type": "shell",
+      "command": "./gradlew assembleDebug",
+      "options": {
+        "cwd": "${workspaceFolder}/native"
+      },
+      "problemMatcher": ["$gradle"]
+    },
+    {
+      "label": "Android: install debug APK",
+      "type": "shell",
+      "command": "adb install -r app/build/outputs/apk/debug/app-debug.apk",
+      "options": {
+        "cwd": "${workspaceFolder}/native"
+      },
+      "dependsOn": "Android: build debug APK",
+      "problemMatcher": []
+    }
+  ]
+}
