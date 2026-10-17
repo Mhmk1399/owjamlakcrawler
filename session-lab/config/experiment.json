@@ -1,0 +1,14 @@
+{
+  "startUrl": "https://divar.ir/s/tehran/real-estate",
+  "verificationUrl": "https://divar.ir/my-divar/my-posts",
+  "checkpointMinutes": [0, 15, 30, 60, 120, 360, 720, 1440],
+  "navigationTimeoutMs": 60000,
+  "authenticationPollMs": 3000,
+  "timezone": "Asia/Tehran",
+  "profileDirectory": ".profile",
+  "resultsDirectory": "results",
+  "contactObservation": {
+    "enabled": false,
+    "allowedListingTokens": []
+  }
+}

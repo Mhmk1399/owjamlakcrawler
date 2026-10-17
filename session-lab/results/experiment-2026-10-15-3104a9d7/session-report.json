@@ -1,0 +1,20 @@
+{
+  "experimentId": "experiment-2026-10-15-3104a9d7",
+  "accountType": "pro",
+  "startedAt": null,
+  "generatedAt": "2026-10-15T07:38:52.847Z",
+  "checkpointCount": 0,
+  "checkpointScheduleMinutes": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    360,
+    720,
+    1440
+  ],
+  "verificationUrl": "https://divar.ir/my-divar/my-posts",
+  "summary": "No confirmed authenticated checkpoint yet.",
+  "checkpoints": []
+}

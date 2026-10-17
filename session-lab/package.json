@@ -1,0 +1,20 @@
+{
+  "name": "owj-session-lab",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "session-lab": "tsx src/index.ts",
+    "session-lab:report": "tsx src/report-cli.ts",
+    "session-lab:test": "node --import tsx --test test/*.test.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}

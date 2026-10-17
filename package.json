@@ -14,7 +14,10 @@
     "dev:analytics-dashboard": "npm --prefix owj-market-analytics run dashboard:dev",
     "build:analytics-dashboard": "npm --prefix owj-market-analytics run dashboard:build",
     "score:analytics": "npm --prefix owj-market-analytics run score",
-    "test:analytics": "npm --prefix owj-market-analytics test"
+    "test:analytics": "npm --prefix owj-market-analytics test",
+    "session-lab": "npm --prefix session-lab run session-lab",
+    "session-lab:report": "npm --prefix session-lab run session-lab:report",
+    "session-lab:test": "npm --prefix session-lab run session-lab:test"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +26,10 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }
