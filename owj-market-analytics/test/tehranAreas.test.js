@@ -53,6 +53,15 @@ test("filters crawl partitions to the curated Tehran focus list by stable Divar 
   assert.deepEqual(queue[0].area.municipalDistricts, [12]);
   assert.deepEqual(queue[0].area.reviewStatuses, ["Assigned"]);
   assert.equal(TEHRAN_FOCUS_AREAS.length, 168);
+  assert.equal(new Set(TEHRAN_FOCUS_AREAS.map((area) => area.id)).size, 168);
+  assert.deepEqual(
+    [...new Set(TEHRAN_FOCUS_AREAS.flatMap((area) => area.municipalDistricts))].sort((a, b) => a - b),
+    [3, 4, 6, 7, 8, 12, 13, 14, 15],
+  );
+  assert.equal(
+    TEHRAN_FOCUS_AREAS.reduce((sum, area) => sum + area.municipalDistricts.length, 0),
+    171,
+  );
 });
 
 test("loads areas through a minimal public request", async () => {

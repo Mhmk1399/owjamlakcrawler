@@ -58,6 +58,8 @@ function fieldMedianByArea(records, selector, fallback) {
 
 function rejectReasons(listing) {
   const reasons = [];
+  if (listing?.lifecycle?.status === "removed") reasons.push("listing-removed");
+  if (listing?.quality?.outcome && listing.quality.outcome !== "scoring-ready") reasons.push("not-scoring-ready");
   if (listing?.subcategory !== "buy-residential-apartment") reasons.push("subcategory-out-of-scope");
   if (!within(listing?.property?.area, LIMITS.area)) reasons.push("invalid-or-implausible-area");
   if (!within(listing?.pricing?.price, LIMITS.price)) reasons.push("invalid-or-implausible-price");

@@ -5,6 +5,7 @@ import { toPublicMarketListing, validatePublicMarketListing } from "../src/colle
 import {
   isForbiddenContactUrl,
   listingMatchesPartition,
+  validateListingPartition,
 } from "../src/collector/publicCrawler.js";
 
 function normalizedFixture(overrides = {}) {
@@ -54,6 +55,15 @@ test("public projection removes contact and identity fields and derives price pe
   });
   assert.match(listing.title, /\[redacted-phone\]/);
   assert.doesNotMatch(JSON.stringify(listing), /09121234567|Private Person/);
+  assert.equal(listing.quality.outcome, "scoring-ready");
+  assert.equal(listing.lifecycle.status, "active");
+});
+
+test("content fingerprint records publication, image, advertiser and quality changes", () => {
+  const base = toPublicMarketListing(normalizedFixture(), null, "2026-01-01T00:00:00.000Z");
+  const changed = toPublicMarketListing(normalizedFixture({ images: ["a", "b"], publishedText: "لحظاتی پیش",
+    advertiser: { type: "املاک" }, quality: { score: 80, missingFields: ["floor"] } }), null, "2026-01-01T00:00:00.000Z");
+  assert.notEqual(base.contentFingerprint, changed.contentFingerprint);
 });
 
 test("contact endpoint guard recognizes forbidden URLs", () => {
@@ -80,6 +90,18 @@ test("partition guard accepts only the requested apartment area", () => {
   }, discovered), false);
 });
 
+test("partition guard accepts a source slug alias and returns typed mismatch reasons", () => {
+  const discovered = { expectedSubcategory: "buy-residential-apartment", area: {
+    name: "اختیاریه", slug: "ekhtiyariyeh", secondSlugs: ["ekhtiarieh"],
+  } };
+  assert.equal(validateListingPartition({ subcategory: "buy-residential-apartment", neighborhood: "alternate label",
+    sourceNeighborhoodSlug: "ekhtiarieh" }, discovered).matches, true);
+  assert.equal(validateListingPartition({ subcategory: "buy-residential-villa", neighborhood: "اختیاریه" }, discovered).reason,
+    "subcategory-mismatch");
+  assert.equal(validateListingPartition({ subcategory: "buy-residential-apartment", neighborhood: "دروس" }, discovered).reason,
+    "neighborhood-mismatch");
+});
+
 test("runtime schema guard rejects contact-bearing records", () => {
   const listing = toPublicMarketListing(normalizedFixture());
   assert.throws(
@@ -104,8 +126,7 @@ test("public listing JSON schema is valid JSON and requires no contact field", a
 });
 
 test("public extractor has no static contact or token-client dependency", async () => {
-  const listingModule = await fs.readFile(new URL("../../src/crawler/listing.js", import.meta.url), "utf8");
   const publicModule = await fs.readFile(new URL("../src/collector/publicListing.js", import.meta.url), "utf8");
-  assert.doesNotMatch(listingModule, /^import .*\.\/contact\.js/m);
   assert.doesNotMatch(publicModule, /from\s+["'].*(?:contact|tokenClient)/);
+  assert.doesNotMatch(publicModule, /\.\.\/\.\.\/\.\.\//);
 });

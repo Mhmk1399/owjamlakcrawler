@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveListingLocation } from "../locations/hierarchy.js";
+import { nextLifecycleStatus } from "../collector/listingPolicy.js";
 
 async function readJson(file, fallback) {
   try {
@@ -44,7 +45,24 @@ function migrateListing(listing) {
       area: null,
     },
   };
-  return { ...migrated, resolvedLocation: resolveListingLocation(migrated) };
+  return {
+    ...migrated,
+    resolvedLocation: resolveListingLocation(migrated),
+    quality: {
+      ...migrated.quality,
+      outcome: migrated.quality?.outcome ?? "history-only",
+      outcomeReasons: migrated.quality?.outcomeReasons ?? ["legacy-unclassified"],
+    },
+    lifecycle: migrated.lifecycle ?? {
+      status: "active",
+      detailFetchedAt: migrated.lastSeenAt ?? null,
+      lastDiscoveredAt: migrated.lastSeenAt ?? null,
+      lastConfirmedRunId: null,
+      lastContentChangedAt: migrated.lastSeenAt ?? null,
+      consecutiveMisses: 0,
+      removedAt: null,
+    },
+  };
 }
 
 export class JsonMarketStore {
@@ -104,8 +122,11 @@ export class JsonMarketStore {
     return this.listings.get(token) || null;
   }
 
-  getListings() {
-    return [...this.listings.values()];
+  getListings({ activeOnly = false, scoringReadyOnly = false } = {}) {
+    return [...this.listings.values()].filter((listing) => (
+      (!activeOnly || listing.lifecycle?.status !== "removed") &&
+      (!scoringReadyOnly || listing.quality?.outcome === "scoring-ready")
+    ));
   }
 
   async upsertListing(listing, runId) {
@@ -115,6 +136,14 @@ export class JsonMarketStore {
       ...listing,
       firstSeenAt: existing?.firstSeenAt || listing.firstSeenAt,
       lastSeenAt: listing.lastSeenAt,
+      lifecycle: {
+        ...listing.lifecycle,
+        status: "active",
+        lastDiscoveredAt: listing.lastSeenAt,
+        lastConfirmedRunId: runId,
+        consecutiveMisses: 0,
+        removedAt: null,
+      },
     };
     this.listings.set(listing.token, merged);
 
@@ -144,6 +173,52 @@ export class JsonMarketStore {
     return { listing: merged, changed, existed: Boolean(existing) };
   }
 
+  async confirmListingSeen(token, runId, observedAt = new Date().toISOString()) {
+    const existing = this.listings.get(token);
+    if (!existing) return null;
+    const merged = {
+      ...existing,
+      lifecycle: {
+        ...existing.lifecycle,
+        status: "active",
+        lastDiscoveredAt: observedAt,
+        lastConfirmedRunId: runId,
+        consecutiveMisses: 0,
+        removedAt: null,
+      },
+    };
+    this.listings.set(token, merged);
+    this.writeQueue = this.writeQueue.then(() => writeJsonAtomic(
+      path.join(this.paths.listingRecords, `${safeToken(token)}.json`), merged,
+    ));
+    await this.writeQueue;
+    return merged;
+  }
+
+  async reconcileLifecycle({ runId, observedTokens, completedAreaIds, removalThreshold = 3, now = new Date().toISOString() }) {
+    const observed = new Set(observedTokens);
+    const completed = new Set([...completedAreaIds].map(Number));
+    const summary = { active: 0, notSeen: 0, possiblyRemoved: 0, removed: 0 };
+    for (const [token, listing] of this.listings) {
+      const areaId = Number(listing.crawlPartition?.area?.id);
+      if (!completed.has(areaId) || observed.has(token)) continue;
+      const misses = (listing.lifecycle?.consecutiveMisses || 0) + 1;
+      const status = nextLifecycleStatus(misses, removalThreshold);
+      const merged = { ...listing, lifecycle: {
+        ...listing.lifecycle, status, consecutiveMisses: misses,
+        removedAt: status === "removed" ? listing.lifecycle?.removedAt || now : null,
+        lastConfirmedRunId: listing.lifecycle?.lastConfirmedRunId ?? null,
+      } };
+      this.listings.set(token, merged);
+      summary[status === "not-seen" ? "notSeen" : status === "possibly-removed" ? "possiblyRemoved" : status] += 1;
+      this.writeQueue = this.writeQueue.then(() => writeJsonAtomic(
+        path.join(this.paths.listingRecords, `${safeToken(token)}.json`), merged,
+      ));
+    }
+    await this.writeQueue;
+    return summary;
+  }
+
   async readModelState() {
     return readJson(this.paths.model, null);
   }
@@ -170,6 +245,25 @@ export class JsonMarketStore {
   async flush() {
     await this.writeQueue;
     await this.writeListingsSnapshot();
+  }
+
+  async compactHistory({ maxObservationsPerListing = 50 } = {}) {
+    const names = await fs.readdir(this.paths.observations).catch((error) => {
+      if (error.code === "ENOENT") return [];
+      throw error;
+    });
+    let compactedFiles = 0;
+    let removedObservations = 0;
+    for (const name of names.filter((item) => item.endsWith(".json"))) {
+      const file = path.join(this.paths.observations, name);
+      const history = await readJson(file, null);
+      if (!Array.isArray(history?.observations) || history.observations.length <= maxObservationsPerListing) continue;
+      removedObservations += history.observations.length - maxObservationsPerListing;
+      history.observations = history.observations.slice(-maxObservationsPerListing);
+      await writeJsonAtomic(file, history);
+      compactedFiles += 1;
+    }
+    return { compactedFiles, removedObservations, maxObservationsPerListing };
   }
 
   async writeListingsSnapshot() {

@@ -14,6 +14,7 @@
     "city",
     "district",
     "neighborhood",
+    "sourceNeighborhoodSlug",
     "publishedText",
     "crawlPartition",
     "property",
@@ -23,6 +24,7 @@
     "coordinates",
     "imageCount",
     "quality",
+    "lifecycle",
     "firstSeenAt",
     "lastSeenAt",
     "contentFingerprint"
@@ -37,6 +39,7 @@
     "city": { "type": ["string", "null"] },
     "district": { "type": ["string", "null"] },
     "neighborhood": { "type": ["string", "null"] },
+    "sourceNeighborhoodSlug": { "type": ["string", "null"] },
     "resolvedLocation": {
       "type": "object",
       "additionalProperties": false,
@@ -65,7 +68,12 @@
           "properties": {
             "id": { "type": ["integer", "null"] },
             "name": { "type": ["string", "null"] },
-            "slug": { "type": ["string", "null"] }
+            "slug": { "type": ["string", "null"] },
+            "municipalDistricts": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "integer", "minimum": 1, "maximum": 22 }
+            }
           }
         }
       }
@@ -125,10 +133,26 @@
     "quality": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["score", "missingFields"],
+      "required": ["score", "missingFields", "outcome", "outcomeReasons"],
       "properties": {
         "score": { "type": "number", "minimum": 0, "maximum": 100 },
-        "missingFields": { "type": "array", "items": { "type": "string" } }
+        "missingFields": { "type": "array", "items": { "type": "string" } },
+        "outcome": { "enum": ["scoring-ready", "history-only"] },
+        "outcomeReasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "detailFetchedAt", "lastDiscoveredAt", "lastConfirmedRunId", "lastContentChangedAt", "consecutiveMisses", "removedAt"],
+      "properties": {
+        "status": { "enum": ["active", "not-seen", "possibly-removed", "removed"] },
+        "detailFetchedAt": { "type": ["string", "null"], "format": "date-time" },
+        "lastDiscoveredAt": { "type": ["string", "null"], "format": "date-time" },
+        "lastConfirmedRunId": { "type": ["string", "null"] },
+        "lastContentChangedAt": { "type": ["string", "null"], "format": "date-time" },
+        "consecutiveMisses": { "type": "integer", "minimum": 0 },
+        "removedAt": { "type": ["string", "null"], "format": "date-time" }
       }
     },
     "firstSeenAt": { "type": "string", "format": "date-time" },

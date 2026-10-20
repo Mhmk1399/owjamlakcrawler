@@ -1,18 +1,24 @@
 import { randomUUID } from "node:crypto";
 import { chromium, request as playwrightRequest } from "playwright";
-import { normalizePersianText } from "../../../src/utils/persian.js";
+import { normalizePersianText } from "../utils/persian.js";
 import {
   collectListingUrls,
   createSearchDiagnostics,
   openSearchPage,
-} from "../../../src/crawler/search.js";
+} from "./browserSearch.js";
 import { crawlPublicListing } from "./publicListing.js";
+import { fetchPublicPostDocument } from "./divarPost.js";
 import { fetchApartmentAreaListings } from "./divarSearch.js";
 import {
   buildApartmentAreaQueue,
   fetchTehranAreas,
+  loadBundledTehranAreas,
   TEHRAN_FOCUS_AREAS,
 } from "./tehranAreas.js";
+import { withRetry } from "./retry.js";
+import { refreshDecision } from "./listingPolicy.js";
+import { planAdaptivePartitions, RequestBudget } from "./crawlPlanning.js";
+import { cleanupOldDebugArtifacts } from "../storage/retention.js";
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
@@ -40,15 +46,22 @@ function safePublicUrl(value) {
 }
 
 export function listingMatchesPartition(listing, discovered) {
-  if (
-    discovered?.expectedSubcategory &&
-    listing?.subcategory !== discovered.expectedSubcategory
-  ) return false;
-  if (discovered?.area?.name) {
-    return normalizePersianText(listing?.neighborhood) ===
-      normalizePersianText(discovered.area.name);
+  return validateListingPartition(listing, discovered).matches;
+}
+
+export function validateListingPartition(listing, discovered) {
+  if (discovered?.expectedSubcategory && listing?.subcategory !== discovered.expectedSubcategory) {
+    return { matches: false, reason: "subcategory-mismatch" };
   }
-  return true;
+  const expectedNames = [discovered?.area?.name, ...(discovered?.area?.aliases || [])]
+    .filter(Boolean).map(normalizePersianText);
+  const name = normalizePersianText(listing?.neighborhood);
+  if (expectedNames.length && expectedNames.includes(name)) return { matches: true, reason: "exact-or-alias-name" };
+  const slug = String(listing?.sourceNeighborhoodSlug || "").toLowerCase();
+  const expectedSlugs = [discovered?.area?.slug, ...(discovered?.area?.secondSlugs || [])]
+    .filter(Boolean).map((value) => String(value).toLowerCase());
+  if (slug && expectedSlugs.includes(slug)) return { matches: true, reason: "exact-or-alias-slug" };
+  return { matches: !expectedNames.length && !expectedSlugs.length, reason: "neighborhood-mismatch" };
 }
 
 export class PublicCrawler {
@@ -64,6 +77,9 @@ export class PublicCrawler {
     this.currentPromise = null;
     this.requestSchedule = Promise.resolve();
     this.lastPublicRequestAt = 0;
+    this.planning = { areaOffset: 0, nextAreaOffset: 0 };
+    this.requestBudget = null;
+    this.cooldownUntil = null;
     this.state = {
       status: "idle",
       runId: null,
@@ -78,6 +94,14 @@ export class PublicCrawler {
       processed: 0,
       successful: 0,
       failed: 0,
+      recovered: 0,
+      retries: 0,
+      skippedFresh: 0,
+      newListings: 0,
+      refreshedListings: 0,
+      scoringReady: 0,
+      historyOnly: 0,
+      lifecycle: {},
       changed: 0,
       contactEndpointAttempts: 0,
       httpWarnings: {},
@@ -95,11 +119,15 @@ export class PublicCrawler {
       schemaVersion: "1.0.0",
       updatedAt: new Date().toISOString(),
       crawl: this.snapshot(),
+      planning: this.planning,
     });
   }
 
   start() {
     if (this.currentPromise) return { started: false, reason: "crawl-already-running", state: this.snapshot() };
+    if (this.cooldownUntil && Date.now() < Date.parse(this.cooldownUntil)) {
+      return { started: false, reason: "platform-cooldown", cooldownUntil: this.cooldownUntil, state: this.snapshot() };
+    }
     this.stopRequested = false;
     this.currentPromise = this.run()
       .catch((error) => {
@@ -128,7 +156,12 @@ export class PublicCrawler {
   async createContext() {
     // Keep detail API calls isolated from browser cookies and any authenticated
     // state that may exist elsewhere in this repository.
-    this.publicPostRequest = await playwrightRequest.newContext();
+    const rawRequest = await playwrightRequest.newContext();
+    this.publicPostRequest = {
+      get: async (...args) => { await this.waitForPublicRequestSlot("api:get"); await this.requestBudget.acquire("api:get"); return rawRequest.get(...args); },
+      post: async (...args) => { await this.waitForPublicRequestSlot("api:post"); await this.requestBudget.acquire("api:post"); return rawRequest.post(...args); },
+      dispose: () => rawRequest.dispose(),
+    };
     this.browser = await chromium.launch({ headless: this.config.browser.headless });
     this.context = await this.browser.newContext({
       viewport: { width: 1440, height: 900 },
@@ -148,6 +181,14 @@ export class PublicCrawler {
         );
         await this.persistState();
         return route.abort("blockedbyclient");
+      }
+      if (["document", "xhr", "fetch"].includes(route.request().resourceType())) {
+        try { await this.requestBudget.acquire(`browser:${route.request().resourceType()}`); }
+        catch (error) {
+          this.stopRequested = true;
+          this.logger.warn("crawl.request-budget.stop", error.message, { code: error.code, budget: this.requestBudget.snapshot() });
+          return route.abort("blockedbyclient");
+        }
       }
       return route.continue();
     });
@@ -190,24 +231,57 @@ export class PublicCrawler {
     });
   }
 
+  async retryPublicOperation(kind, operation) {
+    return withRetry(operation, {
+      maxAttempts: this.config.crawl.retryMaxAttempts,
+      baseDelayMs: this.config.crawl.retryBaseDelayMs,
+      maxDelayMs: this.config.crawl.retryMaxDelayMs,
+      onRetry: async ({ attempt, nextAttempt, maxAttempts, delayMs, error }) => {
+        this.state.retries += 1;
+        this.logger.warn("crawl.retry.wait", "Transient public request failed; waiting before retry", {
+          kind, attempt, nextAttempt, maxAttempts, delayMs,
+          status: error.status ?? null, code: error.code ?? null, error: error.message,
+        });
+        await this.persistState();
+      },
+    });
+  }
+
   async discover(page) {
     const listings = new Map();
+    const failedPartitions = [];
     const diagnostics = createSearchDiagnostics();
     this.logger.info("crawl.area-queue.load", "Loading Divar Tehran area directory", {
       category: "buy-apartment",
       listingsPerArea: this.config.crawl.listingsPerArea,
       maxAreas: this.config.crawl.maxAreas || null,
     });
-    const areas = await fetchTehranAreas(this.publicPostRequest);
-    const partitions = buildApartmentAreaQueue(areas, {
+    let areas;
+    let areaSource = "live";
+    try {
+      areas = await this.retryPublicOperation("places", () => fetchTehranAreas(this.publicPostRequest));
+    } catch (error) {
+      if ([403, 429].includes(error.status)) throw error;
+      areas = loadBundledTehranAreas();
+      areaSource = "local-fallback";
+      this.logger.warn("crawl.area-queue.local-fallback", "Live place directory unavailable; using bundled public place tree", { error: error.message });
+    }
+    const basePartitions = buildApartmentAreaQueue(areas, {
       listingsPerArea: this.config.crawl.listingsPerArea,
-      maxAreas: this.config.crawl.maxAreas,
       focusAreas: TEHRAN_FOCUS_AREAS,
     });
+    const plan = planAdaptivePartitions(basePartitions, this.store.getListings(), {
+      totalBudget: Math.min(this.config.crawl.maxListings, basePartitions.length * this.config.crawl.listingsPerArea),
+      maxAreas: this.config.crawl.maxAreas,
+      offset: this.planning.areaOffset,
+    });
+    const partitions = plan.partitions;
+    this.planning.nextAreaOffset = plan.nextOffset;
     this.state.areasTotal = partitions.length;
     diagnostics.queue = {
       category: "buy-apartment",
       sourceAreaCount: areas.length,
+      areaSource,
       configuredFocusAreaCount: TEHRAN_FOCUS_AREAS.length,
       queuedAreaCount: partitions.length,
       listingsPerArea: this.config.crawl.listingsPerArea,
@@ -257,18 +331,13 @@ export class PublicCrawler {
       });
       let discovered;
       try {
-        const result = await fetchApartmentAreaListings(
-          this.publicPostRequest,
-          partition.area,
-          {
+        const result = await this.retryPublicOperation(`search:${partition.area.slug}`, () =>
+          fetchApartmentAreaListings(this.publicPostRequest, partition.area, {
             limit,
             maxPages: this.config.crawl.maxSearchIterations,
             maxStalls: this.config.crawl.maxSearchStalls,
-            beforePage: ({ page }) => this.waitForPublicRequestSlot(
-              `area:${partition.area.slug}:page:${page}`,
-            ),
-          },
-        );
+            beforePage: async () => {},
+          }));
         discovered = result.listings;
         partitionDiagnostic.source = "public-search-api";
         partitionDiagnostic.hasNextPage = result.hasNextPage;
@@ -311,13 +380,24 @@ export class PublicCrawler {
           });
           throw apiError;
         }
-        await openSearchPage(page, partition.url);
-        discovered = await collectListingUrls(page, {
-          diagnostics,
-          maxListings: limit,
-          maxIterations: this.config.crawl.maxSearchIterations,
-          maxStalls: this.config.crawl.maxSearchStalls,
-        });
+        try {
+          await openSearchPage(page, partition.url);
+          discovered = await collectListingUrls(page, {
+            diagnostics,
+            maxListings: limit,
+            maxIterations: this.config.crawl.maxSearchIterations,
+            maxStalls: this.config.crawl.maxSearchStalls,
+          });
+          partitionDiagnostic.stopReason = "html-complete";
+        } catch (htmlError) {
+          partitionDiagnostic.stopReason = "recovery-pending";
+          partitionDiagnostic.htmlError = htmlError.message;
+          failedPartitions.push({ partition, partitionDiagnostic, limit });
+          this.logger.error("crawl.discovery.partition.deferred", "Area discovery failed and was queued for recovery", {
+            area: partition.area, apiError: apiError.message, htmlError: htmlError.message,
+          });
+          continue;
+        }
       }
       for (const listing of discovered) {
         if (!listings.has(listing.token)) listings.set(listing.token, enrich(listing));
@@ -343,13 +423,54 @@ export class PublicCrawler {
         areasTotal: this.state.areasTotal,
       });
     }
+    for (const item of failedPartitions.slice(0, this.config.crawl.recoveryMaxItems)) {
+      if (this.stopRequested || listings.size >= this.config.crawl.maxListings) break;
+      const beforeCount = listings.size;
+      try {
+        const result = await this.retryPublicOperation(`search-recovery:${item.partition.area.slug}`, () =>
+          fetchApartmentAreaListings(this.publicPostRequest, item.partition.area, {
+            limit: Math.min(item.limit, this.config.crawl.maxListings - listings.size),
+            maxPages: this.config.crawl.maxSearchIterations,
+            maxStalls: this.config.crawl.maxSearchStalls,
+          }));
+        for (const listing of result.listings) {
+          if (!listings.has(listing.token)) listings.set(listing.token, {
+            ...listing,
+            category: item.partition.category,
+            expectedSubcategory: item.partition.expectedSubcategory,
+            area: item.partition.area,
+          });
+        }
+        item.partitionDiagnostic.source = "public-search-api-recovery";
+        item.partitionDiagnostic.stopReason = result.stopReason;
+        item.partitionDiagnostic.pagesFetched = result.pagesFetched;
+        item.partitionDiagnostic.discovered = result.listings.length;
+        item.partitionDiagnostic.uniqueQueued = listings.size - beforeCount;
+        item.partitionDiagnostic.duplicateCount = result.listings.length - item.partitionDiagnostic.uniqueQueued;
+        item.partitionDiagnostic.shortfall = Math.max(0, item.partition.limit - result.listings.length);
+        this.state.areasCompleted += 1;
+        this.state.discovered = listings.size;
+        this.logger.info("crawl.discovery.partition.recovered", "Deferred area discovery recovered", {
+          area: item.partition.area, count: result.listings.length,
+        });
+      } catch (error) {
+        item.partitionDiagnostic.stopReason = "recovery-failed";
+        item.partitionDiagnostic.finalError = error.message;
+        if ([403, 429].includes(error.status)) {
+          this.stopRequested = true;
+          throw error;
+        }
+        this.logger.error("crawl.discovery.partition.final-failure", "Area discovery recovery failed", {
+          area: item.partition.area, error: error.message,
+        });
+      }
+    }
     diagnostics.endedAt = new Date().toISOString();
     diagnostics.totalUniqueTokens = listings.size;
     return { listings: [...listings.values()], diagnostics };
   }
 
-  async processListing(page, discovered, workerId) {
-    await this.waitForPublicRequestSlot(discovered.token);
+  async processListing(page, discovered, workerId, { recovery = false } = {}) {
     this.state.lastListingToken = discovered.token;
     const startedAt = Date.now();
     this.logger.info("crawl.listing.start", "Processing public listing", {
@@ -362,18 +483,47 @@ export class PublicCrawler {
     });
     try {
       const existing = this.store.getListing(discovered.token);
+      if (!recovery) {
+        const freshness = refreshDecision(existing, {
+          freshHours: this.config.crawl.freshDetailHours,
+          changedHours: this.config.crawl.changedDetailHours,
+          staleHours: this.config.crawl.staleDetailHours,
+        });
+        if (!freshness.refresh) {
+          await this.store.confirmListingSeen(discovered.token, this.state.runId);
+          this.state.skippedFresh += 1;
+          this.state.successful += 1;
+          this.logger.info("crawl.listing.skipped-fresh", "Recently refreshed listing detail was not requested again", {
+            runId: this.state.runId, workerId, token: discovered.token,
+            ageMs: freshness.ageMs, intervalHours: freshness.intervalHours,
+          });
+          return { success: true, skippedFresh: true };
+        }
+      }
       const listing = await crawlPublicListing(page, discovered, existing, {
         logger: this.logger,
         apiRequestContext: this.publicPostRequest,
+        apiFetcher: (requestContext, token) => this.retryPublicOperation(
+          `detail:${token}`,
+          () => fetchPublicPostDocument(requestContext, token),
+        ),
       });
-      if (!listingMatchesPartition(listing, discovered)) {
-        throw new Error(
+      const partitionValidation = validateListingPartition(listing, discovered);
+      if (!partitionValidation.matches) {
+        throw Object.assign(new Error(
           `Listing partition mismatch: expected ${discovered.expectedSubcategory || "any"} in ${discovered.area?.name || "any area"}, got ${listing.subcategory || "unknown"} in ${listing.neighborhood || "unknown area"}`,
-        );
+        ), { code: partitionValidation.reason });
       }
       const result = await this.store.upsertListing(listing, this.state.runId);
-      const analysis = await this.analytics.ingest(result.listing);
+      const scoringReady = result.listing.quality?.outcome === "scoring-ready";
+      const analysis = scoringReady
+        ? await this.analytics.ingest(result.listing)
+        : { status: "history-only", score: null };
       this.state.successful += 1;
+      if (result.existed) this.state.refreshedListings += 1;
+      else this.state.newListings += 1;
+      if (scoringReady) this.state.scoringReady += 1;
+      else this.state.historyOnly += 1;
       if (result.changed) this.state.changed += 1;
       this.logger.info("crawl.listing.success", "Public listing stored and analyzed", {
         runId: this.state.runId,
@@ -387,8 +537,9 @@ export class PublicCrawler {
         requestedArea: discovered.area,
         actualNeighborhood: listing.neighborhood,
       });
+      return { success: true };
     } catch (error) {
-      this.state.failed += 1;
+      if (!recovery) this.state.failed += 1;
       if (error.status === 403 || error.status === 429) {
         this.state.httpWarnings[error.status] = (this.state.httpWarnings[error.status] || 0) + 1;
         this.logger.warn("crawl.platform.backoff", `Public detail API returned HTTP ${error.status}`, {
@@ -411,8 +562,9 @@ export class PublicCrawler {
         elapsedMs: Date.now() - startedAt,
         error: error.stack || error.message,
       });
+      return { success: false, error };
     } finally {
-      this.state.processed += 1;
+      if (!recovery) this.state.processed += 1;
       await this.persistState();
     }
   }
@@ -421,6 +573,7 @@ export class PublicCrawler {
     this.state.queued = listings.length;
     await this.persistState();
     let cursor = 0;
+    const recoveryQueue = [];
     const workerCount = Math.min(this.config.crawl.detailConcurrency, listings.length);
     const runWorker = async (workerId) => {
       const page = await this.context.newPage();
@@ -429,16 +582,49 @@ export class PublicCrawler {
           const index = cursor;
           cursor += 1;
           if (index >= listings.length) break;
-          await this.processListing(page, listings[index], workerId);
+          const result = await this.processListing(page, listings[index], workerId);
+          if (!result.success && ![403, 429].includes(result.error?.status)) {
+            recoveryQueue.push(listings[index]);
+          }
         }
       } finally {
         await page.close().catch(() => {});
       }
     };
     await Promise.all(Array.from({ length: workerCount }, (_, index) => runWorker(index + 1)));
+    const recoveryLimit = Math.min(this.config.crawl.recoveryMaxItems, recoveryQueue.length);
+    for (let attempt = 1; attempt <= this.config.crawl.recoveryAttempts && !this.stopRequested; attempt += 1) {
+      const batch = recoveryQueue.splice(0, recoveryLimit);
+      if (!batch.length) break;
+      this.logger.info("crawl.recovery.start", "Retrying failed public listing details", {
+        attempt, count: batch.length,
+      });
+      const page = await this.context.newPage();
+      try {
+        for (const listing of batch) {
+          if (this.stopRequested) break;
+          const result = await this.processListing(page, listing, "recovery", { recovery: true });
+          if (result.success) {
+            this.state.recovered += 1;
+            this.state.failed = Math.max(0, this.state.failed - 1);
+          } else if (![403, 429].includes(result.error?.status)) recoveryQueue.push(listing);
+        }
+      } finally {
+        await page.close().catch(() => {});
+      }
+    }
   }
 
   async run() {
+    const previousState = await this.store.readServiceState();
+    this.planning = {
+      areaOffset: previousState?.planning?.nextAreaOffset || 0,
+      nextAreaOffset: previousState?.planning?.nextAreaOffset || 0,
+    };
+    this.requestBudget = new RequestBudget({
+      maxPerRun: this.config.crawl.maxRequestsPerRun,
+      maxPerMinute: this.config.crawl.maxRequestsPerMinute,
+    });
     this.state = {
       status: "starting",
       runId: randomUUID(),
@@ -453,6 +639,17 @@ export class PublicCrawler {
       processed: 0,
       successful: 0,
       failed: 0,
+      recovered: 0,
+      retries: 0,
+      skippedFresh: 0,
+      newListings: 0,
+      refreshedListings: 0,
+      scoringReady: 0,
+      historyOnly: 0,
+      lifecycle: {},
+      requestBudget: this.requestBudget.snapshot(),
+      completeness: { status: "running", areaCoverage: 0, detailCoverage: 0 },
+      cooldownUntil: null,
       changed: 0,
       contactEndpointAttempts: 0,
       httpWarnings: {},
@@ -481,7 +678,28 @@ export class PublicCrawler {
       this.state.status = "processing";
       await this.persistState();
       await this.processDetails(listings);
+      const lifecycleEligibleAreaIds = diagnostics.partitions
+        .filter((partition) => partition.stopReason === "source-exhausted")
+        .map((partition) => partition.area?.id)
+        .filter(Number.isInteger);
+      this.state.lifecycle = await this.store.reconcileLifecycle({
+        runId: this.state.runId,
+        observedTokens: listings.map((listing) => listing.token),
+        completedAreaIds: lifecycleEligibleAreaIds,
+        removalThreshold: this.config.crawl.removalMissThreshold,
+      });
       await this.store.flush();
+
+      const areasComplete = this.state.areasTotal > 0 && this.state.areasCompleted === this.state.areasTotal;
+      const detailsComplete = this.state.queued === 0 || this.state.processed === this.state.queued;
+      this.state.completeness = {
+        status: !this.stopRequested && areasComplete && detailsComplete && this.state.failed === 0 ? "complete" : "partial",
+        areaCoverage: this.state.areasTotal ? Number((this.state.areasCompleted / this.state.areasTotal * 100).toFixed(2)) : 0,
+        detailCoverage: this.state.queued ? Number((this.state.successful / this.state.queued * 100).toFixed(2)) : 100,
+        failedDetails: this.state.failed,
+        stopRequested: this.stopRequested,
+      };
+      diagnostics.completeness = this.state.completeness;
 
       const analytics = {
         ...this.analytics.publicSnapshot(),
@@ -489,18 +707,41 @@ export class PublicCrawler {
         searchDiagnostics: diagnostics,
       };
       await this.store.saveAnalytics(analytics);
+      const retention = await this.store.compactHistory({
+        maxObservationsPerListing: this.config.retention.maxObservationsPerListing,
+      });
+      const debugRetention = await cleanupOldDebugArtifacts(this.config.serviceRoot, {
+        maxAgeDays: this.config.retention.debugArtifactDays,
+      });
+      this.logger.info("crawl.retention.complete", "Crawler storage retention applied", {
+        ...retention, debugArtifactsRemoved: debugRetention.removed.length,
+      });
       this.state.status = this.stopRequested ? "stopped" : "completed";
     } catch (error) {
+      if (error.status === 429) {
+        const cooldownMs = Math.max(15 * 60_000, error.retryAfterMs || 0);
+        this.cooldownUntil = new Date(Date.now() + cooldownMs).toISOString();
+        this.state.cooldownUntil = this.cooldownUntil;
+      }
       this.state.status = this.stopRequested && [403, 429].includes(error.status)
         ? "stopped"
         : "failed";
       this.state.error = error.message;
+      this.state.completeness = {
+        status: this.state.status === "stopped" ? "stopped" : "failed",
+        areaCoverage: this.state.areasTotal ? Number((this.state.areasCompleted / this.state.areasTotal * 100).toFixed(2)) : 0,
+        detailCoverage: this.state.queued ? Number((this.state.successful / this.state.queued * 100).toFixed(2)) : 0,
+        failedDetails: this.state.failed,
+        stopRequested: this.stopRequested,
+      };
       this.logger.error("crawl.run.failure", "Live public crawl failed", {
         runId: this.state.runId,
         error: error.stack || error.message,
       });
     } finally {
       this.state.endedAt = new Date().toISOString();
+      this.state.requestBudget = this.requestBudget?.snapshot() || {};
+      this.planning.areaOffset = this.planning.nextAreaOffset;
       this.state.partition = null;
       this.state.area = null;
       await this.persistState();
@@ -519,5 +760,10 @@ export class PublicCrawler {
     this.logger.warn("crawl.stop.requested", "Crawler stop requested", { runId: this.state.runId });
     await this.context?.close().catch(() => {});
     if (this.currentPromise) await this.currentPromise;
+  }
+
+  async waitForCompletion() {
+    if (this.currentPromise) await this.currentPromise;
+    return this.snapshot();
   }
 }

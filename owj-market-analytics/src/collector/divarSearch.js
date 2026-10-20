@@ -1,4 +1,5 @@
-import { canonicalizeDivarUrl } from "../../../src/utils/url.js";
+import { canonicalizeDivarUrl } from "../utils/divarUrl.js";
+import { parseRetryAfter } from "./retry.js";
 
 const SEARCH_ENDPOINT = "https://api.divar.ir/v8/postlist/w/search";
 const TOKEN = /^[A-Za-z0-9_-]+$/;
@@ -114,10 +115,12 @@ export async function fetchApartmentAreaListings(
     }
     status = response.status();
     if (status !== 200) {
-      throw new DivarPublicSearchError(`Divar area search returned HTTP ${status}`, {
+      const error = new DivarPublicSearchError(`Divar area search returned HTTP ${status}`, {
         status,
         code: "unexpected-status",
       });
+      error.retryAfterMs = parseRetryAfter(response.headers?.()["retry-after"]);
+      throw error;
     }
     let document;
     try {

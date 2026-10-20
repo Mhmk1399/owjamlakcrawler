@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { parseRetryAfter } from "./retry.js";
 
 const PLACES_URL = "https://map.divarcdn.com/places-web.json";
 const TEHRAN_PLACE_ID = "1";
@@ -11,10 +12,36 @@ function loadFocusAreas() {
   if (!Array.isArray(document?.areas) || !document.areas.length) {
     throw new Error("Tehran focus-area file contains no areas");
   }
+  const expectedDistricts = new Set(document.selectedMunicipalDistricts || []);
+  const ids = new Set();
+  let districtAssociations = 0;
+  for (const area of document.areas) {
+    if (!Number.isInteger(area.id) || ids.has(area.id)) {
+      throw new Error(`Tehran focus-area file contains an invalid or duplicate ID: ${area.id}`);
+    }
+    ids.add(area.id);
+    if (Number(area.parent) !== 1 || String(area.type) !== "4") {
+      throw new Error(`Tehran focus area ${area.id} is not a Tehran neighborhood`);
+    }
+    if (!Array.isArray(area.municipalDistricts) || !area.municipalDistricts.length
+      || area.municipalDistricts.some((district) => !expectedDistricts.has(district))) {
+      throw new Error(`Tehran focus area ${area.id} has an invalid municipal district`);
+    }
+    districtAssociations += area.municipalDistricts.length;
+  }
+  if (ids.size !== document.uniqueAreaCount
+    || districtAssociations !== document.districtAssociationCount) {
+    throw new Error("Tehran focus-area metadata does not match its area records");
+  }
   return document.areas;
 }
 
 export const TEHRAN_FOCUS_AREAS = Object.freeze(loadFocusAreas());
+
+export function loadBundledTehranAreas() {
+  const document = JSON.parse(fs.readFileSync(new URL("../locations/places.json", import.meta.url), "utf8"));
+  return extractTehranAreas(document);
+}
 
 export class DivarPlacesError extends Error {
   constructor(message, { status = null, code = "places-error" } = {}) {
@@ -79,10 +106,12 @@ export async function fetchTehranAreas(requestContext, { timeoutMs = 15_000 } = 
   }
   const status = response.status();
   if (status !== 200) {
-    throw new DivarPlacesError(`Divar places request returned HTTP ${status}`, {
+    const error = new DivarPlacesError(`Divar places request returned HTTP ${status}`, {
       status,
       code: "unexpected-status",
     });
+    error.retryAfterMs = parseRetryAfter(response.headers?.()["retry-after"]);
+    throw error;
   }
   try {
     return extractTehranAreas(await response.json());
@@ -124,6 +153,7 @@ export function buildApartmentAreaQueue(
       ...(focusById ? {
         municipalDistricts: focusById.get(Number(area.id)).municipalDistricts,
         reviewStatuses: focusById.get(Number(area.id)).reviewStatuses,
+        secondSlugs: focusById.get(Number(area.id)).secondSlugs,
       } : {}),
     },
     url: apartmentAreaUrl(area.slug),

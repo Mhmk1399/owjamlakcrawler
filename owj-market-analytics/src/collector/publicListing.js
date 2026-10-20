@@ -1,18 +1,124 @@
 import { createHash } from "node:crypto";
-import { extractListing } from "../../../src/crawler/listing.js";
-import {
-  fillMissingListingFields,
-  normalizeListing,
-  validateListing,
-} from "../../../src/parsers/realEstate.js";
 import {
   adaptPublicPostDocument,
   fetchPublicPostDocument,
 } from "./divarPost.js";
 import { resolveListingLocation } from "../locations/hierarchy.js";
+import { classifyListingQuality } from "./listingPolicy.js";
 
 const PHONE_LIKE = /(?<!\d)(?:(?:\+98|0098|0)[\d -]{9,16}\d)(?!\d)/g;
 const EMAIL_LIKE = /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
+const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+function latinDigits(value) {
+  return String(value ?? "")
+    .replace(/[۰-۹]/g, (digit) => PERSIAN_DIGITS.indexOf(digit))
+    .replace(/[٠-٩]/g, (digit) => ARABIC_DIGITS.indexOf(digit));
+}
+
+function numberFrom(value) {
+  const match = latinDigits(value).replace(/[,٬،\s]/g, "").match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}
+
+function moneyFrom(value) {
+  const number = numberFrom(value);
+  if (!Number.isFinite(number)) return null;
+  const text = String(value);
+  if (text.includes("میلیارد")) return number * 1_000_000_000;
+  if (text.includes("میلیون")) return number * 1_000_000;
+  return number;
+}
+
+function attribute(raw, pattern) {
+  const entry = Object.entries(raw.structuredAttributes || raw.attributes || {})
+    .find(([label]) => pattern.test(label));
+  return entry?.[1] ?? null;
+}
+
+function coordinatesFrom(raw) {
+  const location = raw.apiCoordinates?.[0];
+  const point = location?.fuzzy_data?.point || location?.exact_data?.point || location?.point || location;
+  const latitude = Number(point?.latitude ?? point?.lat);
+  const longitude = Number(point?.longitude ?? point?.lng);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+    || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return { latitude: null, longitude: null, accuracy: null, radiusMeters: null, source: null };
+  }
+  const approximate = location?.type === "FUZZY" || location?.fuzzy_data;
+  return {
+    latitude, longitude,
+    accuracy: approximate ? "approximate" : "exact",
+    radiusMeters: Number.isFinite(Number(location?.fuzzy_data?.radius))
+      ? Number(location.fuzzy_data.radius) : null,
+    source: raw.extractionSource || "public-html",
+  };
+}
+
+function normalizePublicRaw(raw) {
+  const floorNumbers = latinDigits(attribute(raw, /^طبقه$/)).match(/\d+/g)?.map(Number) || [];
+  const normalized = {
+    token: raw.token, url: raw.url, title: raw.title, category: raw.category || "real-estate",
+    subcategory: raw.subcategory, city: raw.city, district: raw.district,
+    neighborhood: raw.neighborhood, sourceNeighborhoodSlug: raw.sourceNeighborhoodSlug,
+    publishedText: raw.publishedText,
+    property: {
+      area: numberFrom(attribute(raw, /^(متراژ|مساحت)$/)),
+      constructionYear: numberFrom(attribute(raw, /^(ساخت|سال ساخت)$/)),
+      rooms: numberFrom(attribute(raw, /^(اتاق|تعداد اتاق)$/)),
+      floor: floorNumbers[0] ?? null,
+      totalFloors: floorNumbers[1] ?? numberFrom(attribute(raw, /^تعداد طبقات$/)),
+      unitsPerFloor: numberFrom(attribute(raw, /^تعداد واحد در طبقه$/)),
+    },
+    pricing: {
+      price: moneyFrom(attribute(raw, /^(قیمت کل|قیمت فروش)$/)),
+      pricePerMeter: moneyFrom(attribute(raw, /^قیمت هر متر$/)),
+      deposit: moneyFrom(attribute(raw, /^(ودیعه|رهن)/)),
+      rent: moneyFrom(attribute(raw, /^اجاره/)),
+      isFullMortgage: null, isNegotiable: null,
+    },
+    amenities: {
+      elevator: typeof raw.amenities?.elevator === "boolean" ? raw.amenities.elevator : null,
+      parking: typeof raw.amenities?.parking === "boolean" ? raw.amenities.parking : null,
+      storage: typeof raw.amenities?.storage === "boolean" ? raw.amenities.storage : null,
+      balcony: typeof raw.amenities?.balcony === "boolean" ? raw.amenities.balcony : null,
+    },
+    advertiser: { type: null }, images: Array.isArray(raw.images) ? raw.images : [],
+    coordinates: coordinatesFrom(raw), quality: { score: 0, missingFields: [] },
+  };
+  if (!normalized.token || !normalized.url || !normalized.title) {
+    throw new Error("Public listing is missing token, URL, or title");
+  }
+  if (normalized.pricing.deposit !== null || normalized.pricing.rent !== null) normalized.pricing.price = null;
+  const required = { title: normalized.title, subcategory: normalized.subcategory, city: normalized.city,
+    neighborhood: normalized.neighborhood, area: normalized.property.area, rooms: normalized.property.rooms,
+    pricing: normalized.pricing.price ?? normalized.pricing.deposit ?? normalized.pricing.rent };
+  normalized.quality.missingFields = Object.entries(required).filter(([, value]) => value == null).map(([key]) => key);
+  normalized.quality.score = Math.round(((Object.keys(required).length - normalized.quality.missingFields.length)
+    / Object.keys(required).length) * 100);
+  return normalized;
+}
+
+async function extractPublicHtmlListing(page, discovered) {
+  await page.goto(discovered.url, { waitUntil: "domcontentloaded" });
+  const raw = await page.evaluate(() => {
+    const clean = (value) => String(value || "").replace(/\s+/g, " ").trim();
+    const attributes = {};
+    for (const row of document.querySelectorAll("tr, .kt-base-row")) {
+      const values = [...row.children].map((node) => clean(node.textContent)).filter(Boolean);
+      if (values.length === 2) attributes[values[0]] ??= values[1];
+    }
+    return {
+      title: clean(document.querySelector("h1")?.textContent || document.querySelector('meta[property="og:title"]')?.content),
+      attributes,
+      images: [...document.querySelectorAll("main img")].map((image) => image.currentSrc || image.src).filter(Boolean),
+    };
+  });
+  return { ...raw, token: discovered.token, url: discovered.url, category: "real-estate",
+    subcategory: discovered.expectedSubcategory, city: "تهران", neighborhood: discovered.area?.name,
+    sourceNeighborhoodSlug: discovered.area?.slug, extractionSource: "public-html", amenities: {} };
+}
 
 export function redactContactText(value) {
   if (typeof value !== "string") return value;
@@ -43,6 +149,10 @@ function fingerprintFor(listing) {
     property: listing.property,
     pricing: listing.pricing,
     amenities: listing.amenities,
+    advertiserType: listing.advertiserType,
+    imageCount: listing.imageCount,
+    publishedText: listing.publishedText,
+    quality: listing.quality,
   });
   return createHash("sha256").update(source).digest("hex");
 }
@@ -50,7 +160,7 @@ function fingerprintFor(listing) {
 export function validatePublicMarketListing(listing) {
   const required = [
     "schemaVersion", "token", "url", "title", "property", "pricing",
-    "amenities", "coordinates", "crawlPartition", "firstSeenAt", "lastSeenAt", "contentFingerprint",
+    "amenities", "coordinates", "crawlPartition", "quality", "lifecycle", "firstSeenAt", "lastSeenAt", "contentFingerprint",
   ];
   for (const key of required) {
     if (listing?.[key] === undefined || listing?.[key] === null) {
@@ -95,6 +205,7 @@ export function toPublicMarketListing(
     city: normalized.city ?? null,
     district: normalized.district ?? null,
     neighborhood: normalized.neighborhood ?? null,
+    sourceNeighborhoodSlug: normalized.sourceNeighborhoodSlug ?? null,
     resolvedLocation: null,
     publishedText: normalized.publishedText ?? null,
     crawlPartition: {
@@ -105,6 +216,9 @@ export function toPublicMarketListing(
             id: Number.isInteger(discovered.area.id) ? discovered.area.id : null,
             name: discovered.area.name ?? null,
             slug: discovered.area.slug ?? null,
+            municipalDistricts: Array.isArray(discovered.area.municipalDistricts)
+              ? discovered.area.municipalDistricts.filter(Number.isInteger)
+              : [],
           }
         : null,
     },
@@ -147,13 +261,28 @@ export function toPublicMarketListing(
       missingFields: Array.isArray(normalized.quality?.missingFields)
         ? normalized.quality.missingFields
         : [],
+      outcome: null,
+      outcomeReasons: [],
     },
     firstSeenAt: existing?.firstSeenAt || now,
     lastSeenAt: now,
     contentFingerprint: "",
+    lifecycle: {
+      status: "active",
+      detailFetchedAt: now,
+      lastDiscoveredAt: now,
+      lastConfirmedRunId: null,
+      lastContentChangedAt: null,
+      consecutiveMisses: 0,
+      removedAt: null,
+    },
   };
   listing.resolvedLocation = resolveListingLocation(listing);
+  Object.assign(listing.quality, classifyListingQuality(listing));
   listing.contentFingerprint = fingerprintFor(listing);
+  listing.lifecycle.lastContentChangedAt = existing?.contentFingerprint === listing.contentFingerprint
+    ? existing?.lifecycle?.lastContentChangedAt ?? existing?.lastSeenAt ?? now
+    : now;
   return validatePublicMarketListing(listing);
 }
 
@@ -161,9 +290,7 @@ function normalizePublicListing(raw, existing, discovered = null) {
   // Public text can accidentally contain personal contact details. The analytics
   // record does not retain descriptions, names, contact state, or phone fields.
   raw.description = redactContactText(raw.description);
-  const normalized = validateListing(
-    fillMissingListingFields(normalizeListing(raw), raw),
-  );
+  const normalized = normalizePublicRaw(raw);
   return toPublicMarketListing(normalized, existing, new Date().toISOString(), discovered);
 }
 
@@ -190,7 +317,7 @@ export async function crawlPublicListing(
     logger = null,
     apiFetcher = fetchPublicPostDocument,
     apiRequestContext = null,
-    htmlExtractor = extractListing,
+    htmlExtractor = extractPublicHtmlListing,
   } = {},
 ) {
   const apiStartedAt = Date.now();

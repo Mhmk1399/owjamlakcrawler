@@ -295,7 +295,8 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
         const all = store.getListings().filter((listing) => {
           const matchesDistrict = !district ||
             listing.district === district ||
-            listing.neighborhood === district;
+            listing.neighborhood === district ||
+            listing.crawlPartition?.area?.municipalDistricts?.includes(Number(district));
           const partitionArea = listing.crawlPartition?.area;
           const matchesArea = !area || [partitionArea?.slug, partitionArea?.name, String(partitionArea?.id)]
             .filter(Boolean)

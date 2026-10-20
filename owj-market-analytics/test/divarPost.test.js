@@ -178,7 +178,7 @@ test("crawl uses posts-v2 first and only invokes HTML after a non-limit API fail
   assert.deepEqual(apiListing.crawlPartition, {
     category: "buy-apartment",
     expectedSubcategory: "buy-residential-apartment",
-    area: { id: 148, name: "جنت‌آباد جنوبی", slug: "south-janat-abad" },
+    area: { id: 148, name: "جنت‌آباد جنوبی", slug: "south-janat-abad", municipalDistricts: [] },
   });
   assert.equal(htmlCalls, 0);
 

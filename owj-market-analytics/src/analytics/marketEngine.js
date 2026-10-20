@@ -13,7 +13,9 @@ const DEFAULT_SPATIAL_CELL_SIZE_METERS = 1_000;
 const LOCATION_MODEL_VERSION = "buy-apartment-coordinates-v2";
 
 function inScope(listing) {
-  return listing?.subcategory === "buy-residential-apartment";
+  return listing?.subcategory === "buy-residential-apartment" &&
+    listing?.lifecycle?.status !== "removed" &&
+    (!listing?.quality?.outcome || listing.quality.outcome === "scoring-ready");
 }
 
 function transactionType(listing) {

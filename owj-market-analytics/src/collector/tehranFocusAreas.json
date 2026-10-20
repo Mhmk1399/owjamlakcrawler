@@ -1,8 +1,12 @@
 {
-  "schemaVersion": "1.0.0",
-  "description": "Curated Tehran crawl focus supplied by the project owner. Divar place IDs control crawl inclusion; municipal district mappings are review metadata.",
+  "schemaVersion": "1.1.0",
+  "description": "Project-owner approved Tehran crawl scope for municipal districts 3, 4, 6, 7, 8, 12, 13, 14 and 15. Divar place IDs control crawl inclusion; duplicate table rows and the same official place appearing in multiple districts are crawled once.",
   "sourceImportedAt": "2026-10-20",
-  "inclusionPolicy": "Every unique Divar place ID present in the supplied table is included once, including Review and Unresolved rows.",
+  "sourceRowCount": 191,
+  "uniqueAreaCount": 168,
+  "districtAssociationCount": 171,
+  "selectedMunicipalDistricts": [3, 4, 6, 7, 8, 12, 13, 14, 15],
+  "inclusionPolicy": "Every unique Divar place ID represented by the supplied 191-row table is included once. Repeated District 6 rows are de-duplicated. Abuذر, Majidieh and Mehran (Seyedkhandan), which occur in two municipal districts, retain both district associations without duplicate crawling.",
   "areas": [
     {
       "id": 992,

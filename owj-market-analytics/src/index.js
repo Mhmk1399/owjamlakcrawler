@@ -7,7 +7,12 @@ import { createAnalyticsServer } from "./api/server.js";
 
 process.chdir(config.serviceRoot);
 
-const logger = new StructuredLogger({ file: config.paths.logFile, level: config.logLevel });
+const logger = new StructuredLogger({
+  file: config.paths.logFile,
+  level: config.logLevel,
+  maxBytes: config.retention.maxLogBytes,
+  archives: config.retention.logArchives,
+});
 await logger.init();
 
 const store = new JsonMarketStore(config.paths, logger, {
@@ -32,7 +37,7 @@ let crawlTimer = null;
 async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
-  if (crawlTimer) clearInterval(crawlTimer);
+  if (crawlTimer) clearTimeout(crawlTimer);
   logger.warn("service.shutdown", "Analytics service shutdown requested", { signal });
   server.close();
   await crawler.stop().catch((error) => {
@@ -55,15 +60,19 @@ server.listen(config.port, config.host, () => {
     contactMode: "blocked",
   });
   if (config.autoCrawl) {
-    const result = crawler.start();
-    logger.info("service.auto-crawl", "Automatic live crawl requested", result);
-    crawlTimer = setInterval(() => {
-      const scheduled = crawler.start();
-      logger.info("service.scheduled-crawl", "Scheduled live crawl requested", {
+    const runAutomaticCrawl = async () => {
+      if (shuttingDown) return;
+      const result = crawler.start();
+      logger.info("service.auto-crawl", "Completion-based automatic crawl requested", result);
+      await crawler.waitForCompletion();
+      if (shuttingDown) return;
+      logger.info("service.auto-crawl.scheduled", "Next crawl scheduled after completed run", {
         intervalMs: config.crawlIntervalMs,
-        ...scheduled,
+        nextRunAt: new Date(Date.now() + config.crawlIntervalMs).toISOString(),
       });
-    }, config.crawlIntervalMs);
+      crawlTimer = setTimeout(() => void runAutomaticCrawl(), config.crawlIntervalMs);
+    };
+    void runAutomaticCrawl();
   }
 });
 

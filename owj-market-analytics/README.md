@@ -4,9 +4,9 @@ Public-only, live/incremental market analytics for the Owj crawler repository.
 
 This service currently:
 
-- loads Divar's live Tehran area directory;
-- queues every area under the public `buy-apartment` category;
-- discovers 15 apartment-sale listings per area, paginating until the target or confirmed source exhaustion;
+- loads Divar's live Tehran area directory, with the bundled official tree as fallback;
+- restricts collection to the 168 curated Divar neighborhood IDs in `src/collector/tehranFocusAreas.json`;
+- assigns an adaptive request quota and rotating queue position to each selected area;
 - extracts each listing from Divar's public `posts-v2` JSON, with HTML as fallback;
 - blocks the Divar contact endpoint at the browser network layer;
 - stores current listings and observation history as JSON;
@@ -14,6 +14,9 @@ This service currently:
 - computes nearby comparables, highest nearby prices, predictions, and explainable scores;
 - exposes all service responses as JSON;
 - writes structured, redacted JSONL logs for the complete flow.
+- retries safe transient failures, recovers bounded failed work, enforces request budgets, and records run completeness.
+
+The approved crawl scope contains 168 unique official Divar places (171 municipal-district associations) from districts 3, 4, 6, 7, 8, 12, 13, 14, and 15. Duplicate source rows are deliberately collapsed by official place ID.
 
 It does not use the Telegram token bot, access tokens, contact buttons, or authenticated phone APIs.
 
@@ -87,7 +90,9 @@ cleaning losses, coordinate quality, and neighborhood sample behavior. For
 dashboard-only development, keep the analytics service running and
 use `npm run dev:analytics-dashboard`; Vite proxies JSON requests to port 4567.
 
-Copy `.env.example` to `.env` inside this directory to override defaults. Automatic crawling is disabled by default: the analytics service starts only the JSON server and dashboard. Set `ANALYTICS_AUTO_CRAWL=true` to start one crawl when the server becomes ready and repeat every six hours (`ANALYTICS_CRAWL_INTERVAL_MS=21600000`). The collector targets 15 listings per Divar Tehran area (`ANALYTICS_LISTINGS_PER_AREA=15`). Public search pagination continues until every area reaches that target. If Divar reports no next page, stops returning new tokens for the configured stall limit, sends a platform-limit response, or the run-wide safety ceiling is reached, the crawler records an explicit shortfall instead of looping forever. Set `ANALYTICS_MAX_AREAS=3` for a quick 45-listing development crawl; `0` means every available Tehran area. `ANALYTICS_MAX_LISTINGS=10000` is the run-wide safety ceiling. A manual crawl can still be triggered with `POST /crawl`.
+Copy `.env.example` to `.env` inside this directory to override defaults. The reliability profile enables automatic crawling: one run starts when the server becomes ready, and the next run is scheduled six hours after the previous run finishes (`ANALYTICS_CRAWL_INTERVAL_MS=21600000`). The collector starts from a 15-listing-per-area budget, then redistributes that fixed budget toward stale, weak, or underrepresented neighborhoods. Set `ANALYTICS_MAX_AREAS=3` for a quick development crawl; rotating offsets prevent every limited run from selecting the same alphabetical areas. `ANALYTICS_MAX_LISTINGS=10000` and the request budgets are run-wide safety ceilings. A manual crawl can still be triggered with `POST /crawl` when no crawl or platform cooldown is active.
+
+Recently fetched tokens are confirmed without repeating their detail request. Failed areas and listing details receive bounded recovery passes. Listings move through `active`, `not-seen`, `possibly-removed`, and `removed`; removal requires repeated misses and is only inferred from a search that proved source exhaustion. Records missing required price, area, category, or official location evidence are stored as `history-only` and cannot enter live scoring.
 
 Each stored record keeps both the actual `subcategory`/`neighborhood` returned by
 the detail API and a `crawlPartition` object containing the requested category
@@ -119,6 +124,27 @@ auditable instead of silently mixing their data.
 
 Default address: `http://127.0.0.1:4567`.
 
+## Docker: automatic unattended crawling
+
+The Compose project builds and runs only this `owj-market-analytics` directory. It starts a crawl automatically, schedules the next run after the configured interval, restarts after failures or Docker daemon restarts, and persists both data and logs on the host:
+
+```bash
+cd ~/Documents/git/owjcrawler/owj-market-analytics
+docker compose up -d --build
+docker compose logs -f
+```
+
+Open `http://127.0.0.1:4567/`. The bind mounts keep results in `data/` and logs in `logs/`, so rebuilding the image does not erase them. Useful commands:
+
+```bash
+docker compose ps
+docker compose logs --since 24h
+docker compose restart
+docker compose down
+```
+
+`restart: unless-stopped` resumes the service when Docker starts. Locking the desktop does not interrupt it, but Docker cannot run while the laptop is suspended, hibernating, powered off, or out of network connectivity. Disable automatic suspend (while plugged in, at minimum) if the crawl must continue overnight.
+
 ## JSON files
 
 | File | Contents |
@@ -130,6 +156,8 @@ Default address: `http://127.0.0.1:4567`.
 | `data/online-models.json` | Serializable online regression state |
 | `data/service-state.json` | Current/last crawl progress and guardrail counters |
 | `logs/service.jsonl` | Full structured event log with sensitive values redacted |
+
+Observation history is capped per listing, logs rotate by size, and only the specifically named stale search debug screenshot/HTML artifacts are removed. The current listing record is always retained.
 
 Writes use a temporary file followed by rename. The public-listing contract is in `schemas/public-listing.schema.json`.
 

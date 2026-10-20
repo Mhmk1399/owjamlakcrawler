@@ -29,7 +29,7 @@ export function buildDashboardPayload({
   now = new Date().toISOString(),
 } = {}) {
   const inScope = listings.filter((listing) => (
-    listing.subcategory === "buy-residential-apartment"
+    listing.subcategory === "buy-residential-apartment" && listing.lifecycle?.status !== "removed"
   ));
   const exact = inScope.filter((listing) => listing.coordinates?.accuracy === "exact").length;
   const approximate = inScope.filter((listing) => listing.coordinates?.accuracy === "approximate").length;
@@ -50,6 +50,7 @@ export function buildDashboardPayload({
     id: partition.area?.id ?? null,
     name: partition.area?.name ?? "Unknown",
     slug: partition.area?.slug ?? null,
+    municipalDistricts: partition.area?.municipalDistricts ?? [],
     url: partition.url ?? null,
     target: partition.target ?? 0,
     discovered: partition.discovered ?? 0,
@@ -135,6 +136,16 @@ export function buildDashboardPayload({
       successful,
       failed,
       changed: crawl.changed ?? 0,
+      recovered: crawl.recovered ?? 0,
+      retries: crawl.retries ?? 0,
+      skippedFresh: crawl.skippedFresh ?? 0,
+      newListings: crawl.newListings ?? 0,
+      refreshedListings: crawl.refreshedListings ?? 0,
+      scoringReady: crawl.scoringReady ?? 0,
+      historyOnly: crawl.historyOnly ?? 0,
+      lifecycle: crawl.lifecycle || {},
+      requestBudget: crawl.requestBudget || {},
+      completeness: crawl.completeness || analyticsDocument.searchDiagnostics?.completeness || {},
       successRate: ratio(successful, processed),
       failureRate: ratio(failed, processed),
       contactEndpointAttempts: crawl.contactEndpointAttempts ?? 0,

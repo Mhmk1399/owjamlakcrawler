@@ -55,7 +55,7 @@ export const config = {
     ),
     publicRequestIntervalMs: integer(
       process.env.ANALYTICS_PUBLIC_REQUEST_INTERVAL_MS,
-      1_500,
+      2_000,
       250,
       60_000,
     ),
@@ -71,6 +71,17 @@ export const config = {
       1,
       20,
     ),
+    retryMaxAttempts: integer(process.env.ANALYTICS_RETRY_MAX_ATTEMPTS, 3, 1, 6),
+    retryBaseDelayMs: integer(process.env.ANALYTICS_RETRY_BASE_DELAY_MS, 1_000, 100, 60_000),
+    retryMaxDelayMs: integer(process.env.ANALYTICS_RETRY_MAX_DELAY_MS, 15_000, 500, 300_000),
+    recoveryMaxItems: integer(process.env.ANALYTICS_RECOVERY_MAX_ITEMS, 100, 0, 10_000),
+    recoveryAttempts: integer(process.env.ANALYTICS_RECOVERY_ATTEMPTS, 1, 0, 3),
+    freshDetailHours: integer(process.env.ANALYTICS_FRESH_DETAIL_HOURS, 6, 1, 168),
+    changedDetailHours: integer(process.env.ANALYTICS_CHANGED_DETAIL_HOURS, 2, 1, 48),
+    staleDetailHours: integer(process.env.ANALYTICS_STALE_DETAIL_HOURS, 24, 1, 720),
+    removalMissThreshold: integer(process.env.ANALYTICS_REMOVAL_MISS_THRESHOLD, 3, 2, 20),
+    maxRequestsPerRun: integer(process.env.ANALYTICS_MAX_REQUESTS_PER_RUN, 5_000, 10, 100_000),
+    maxRequestsPerMinute: integer(process.env.ANALYTICS_MAX_REQUESTS_PER_MINUTE, 35, 1, 120),
   },
   analytics: {
     minSpatialSample: integer(
@@ -113,5 +124,11 @@ export const config = {
     1,
     1_000,
   ),
+  retention: {
+    maxObservationsPerListing: integer(process.env.ANALYTICS_MAX_OBSERVATIONS_PER_LISTING, 50, 1, 1_000),
+    maxLogBytes: integer(process.env.ANALYTICS_MAX_LOG_BYTES, 25_000_000, 100_000, 1_000_000_000),
+    logArchives: integer(process.env.ANALYTICS_LOG_ARCHIVES, 5, 1, 50),
+    debugArtifactDays: integer(process.env.ANALYTICS_DEBUG_ARTIFACT_DAYS, 14, 1, 365),
+  },
   logLevel: process.env.ANALYTICS_LOG_LEVEL || "debug",
 };

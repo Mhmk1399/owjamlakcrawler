@@ -32,6 +32,9 @@ test("dashboard summary exposes actionable crawl and data-quality metrics", () =
       successful: 17,
       failed: 1,
       contactEndpointAttempts: 0,
+      retries: 2,
+      skippedFresh: 4,
+      completeness: { status: "partial", areaCoverage: 100, detailCoverage: 94.44 },
     },
     listings: [
       listing("exact", "exact"),
@@ -84,6 +87,9 @@ test("dashboard summary exposes actionable crawl and data-quality metrics", () =
   });
 
   assert.equal(payload.crawl.successRate, 94.44);
+  assert.equal(payload.crawl.retries, 2);
+  assert.equal(payload.crawl.skippedFresh, 4);
+  assert.equal(payload.crawl.completeness.status, "partial");
   assert.equal(payload.overview.inScopeListings, 3);
   assert.equal(payload.overview.excludedOutOfScope, 1);
   assert.equal(payload.overview.candidateCoverage, 90);

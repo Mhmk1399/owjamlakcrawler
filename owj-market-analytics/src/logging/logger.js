@@ -23,16 +23,28 @@ function sanitize(value, seen = new WeakSet()) {
 }
 
 export class StructuredLogger {
-  constructor({ file, level = "info", recentLimit = 500 }) {
+  constructor({ file, level = "info", recentLimit = 500, maxBytes = 25_000_000, archives = 5 }) {
     this.file = file;
     this.level = LEVELS[level] ?? LEVELS.info;
     this.recentLimit = recentLimit;
     this.recent = [];
     this.writeQueue = Promise.resolve();
+    this.maxBytes = maxBytes;
+    this.archives = archives;
   }
 
   async init() {
     await fs.mkdir(path.dirname(this.file), { recursive: true });
+    const stat = await fs.stat(this.file).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
+    if (stat?.size >= this.maxBytes) {
+      await fs.rm(`${this.file}.${this.archives}`, { force: true });
+      for (let index = this.archives - 1; index >= 1; index -= 1) {
+        await fs.rename(`${this.file}.${index}`, `${this.file}.${index + 1}`).catch((error) => {
+          if (error.code !== "ENOENT") throw error;
+        });
+      }
+      await fs.rename(this.file, `${this.file}.1`);
+    }
   }
 
   log(level, event, message, context = {}) {

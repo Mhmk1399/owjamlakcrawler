@@ -1,4 +1,5 @@
-import { canonicalizeDivarUrl } from "../../../src/utils/url.js";
+import { canonicalizeDivarUrl } from "../utils/divarUrl.js";
+import { parseRetryAfter } from "./retry.js";
 
 const PUBLIC_POST_ENDPOINT = "https://api.divar.ir/v8/posts-v2/web";
 const TOKEN = /^[A-Za-z0-9_-]+$/;
@@ -47,10 +48,12 @@ export async function fetchPublicPostDocument(requestSource, token, { timeoutMs 
 
   const status = response.status();
   if (status !== 200) {
-    throw new DivarPublicPostError(`Public post request returned HTTP ${status}`, {
+    const error = new DivarPublicPostError(`Public post request returned HTTP ${status}`, {
       status,
       code: "unexpected-status",
     });
+    error.retryAfterMs = parseRetryAfter(response.headers?.()["retry-after"]);
+    throw error;
   }
 
   let document;
@@ -215,6 +218,7 @@ export function adaptPublicPostDocument(document, discovered) {
     city: text(document.seo?.web_info?.city_persian) || text(document.city?.name),
     district: null,
     neighborhood: text(document.seo?.web_info?.district_persian),
+    sourceNeighborhoodSlug: text(document.seo?.web_info?.district_slug),
     publishedText: text(publishedWidget?.title),
     description: text(descriptionWidget?.text),
     breadcrumbs,
