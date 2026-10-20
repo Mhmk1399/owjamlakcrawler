@@ -2,7 +2,8 @@ import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { buildDashboardPayload } from "./dashboard.js";
-import { buildScoreDetail, buildScoringAnalytics } from "./scoringViews.js";
+import { buildScoreDetail, buildScoringAnalytics, buildScoringWorkshop } from "./scoringViews.js";
+import { buildLocationView } from "./locationViews.js";
 
 function sendJson(response, status, value) {
   const body = JSON.stringify(value, null, 2);
@@ -262,6 +263,12 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
         return sendJson(response, 200, buildScoringAnalytics(document, report));
       }
 
+      if (request.method === "GET" && url.pathname === "/score-workshop-data") {
+        const document = await readScoredDocument();
+        if (!document?.listings) return sendJson(response, 404, { error: "scores-not-generated" });
+        return sendJson(response, 200, buildScoringWorkshop(document));
+      }
+
       if (request.method === "GET" && url.pathname === "/scoring-report") {
         const report = await readJson(config.paths.scoringReport, null);
         return report
@@ -306,6 +313,19 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
           limit,
           listings: all.slice(offset, offset + limit).map(externalListing),
         });
+      }
+
+      const locationMatch = url.pathname.match(/^\/locations(?:\/([a-z0-9-]+))?$/i);
+      if (request.method === "GET" && locationMatch) {
+        const scoredDocument = await readScoredDocument();
+        const view = buildLocationView({
+          identifier: locationMatch[1] || "iran",
+          listings: store.getListings(),
+          scoredListings: scoredDocument?.listings || [],
+        });
+        return view
+          ? sendJson(response, 200, view)
+          : sendJson(response, 404, { error: "location-not-found", identifier: locationMatch[1] });
       }
 
       const listingMatch = url.pathname.match(/^\/listings\/([A-Za-z0-9_-]+)\/analysis$/);
@@ -374,6 +394,8 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
 
       const isDashboardRoute = url.pathname === "/" ||
         url.pathname === "/score-analytics" ||
+        url.pathname === "/score-workshop" ||
+        /^\/explore(?:\/[a-z0-9-]+)?$/i.test(url.pathname) ||
         /^\/listing\/[A-Za-z0-9_-]+$/.test(url.pathname);
       if (request.method === "GET" && isDashboardRoute) {
         const sent = await sendStatic(
@@ -409,6 +431,7 @@ export function createAnalyticsServer({ config, store, analytics, crawler, logge
           "GET /scores",
           "GET /score-details/:token",
           "GET /score-analytics-data",
+          "GET /score-workshop-data",
           "GET /scoring-report",
           "POST /crawl",
           "GET /crawl",

@@ -37,6 +37,19 @@
     "city": { "type": ["string", "null"] },
     "district": { "type": ["string", "null"] },
     "neighborhood": { "type": ["string", "null"] },
+    "resolvedLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provinceId", "cityId", "neighborhoodId", "slug", "name", "matchConfidence"],
+      "properties": {
+        "provinceId": { "type": ["integer", "null"] },
+        "cityId": { "type": ["integer", "null"] },
+        "neighborhoodId": { "type": ["integer", "null"] },
+        "slug": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "matchConfidence": { "enum": ["exact-slug", "exact-name", "crawl-partition", "unmatched"] }
+      }
+    },
     "publishedText": { "type": ["string", "null"] },
     "crawlPartition": {
       "type": "object",

@@ -2158,7 +2158,9 @@ export default function AnalyticsDashboard({
         >
           {[
             { label: "نمای کلی", href: "/", active: true },
+            { label: "کاوش مناطق", href: "/explore/tehran", active: false },
             { label: "تحلیل امتیاز", href: "/score-analytics", active: false },
+            { label: "کارگاه امتیاز", href: "/score-workshop", active: false },
           ].map((link) => (
             <a
               key={link.href}

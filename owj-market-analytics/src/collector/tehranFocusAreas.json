@@ -1,0 +1,3149 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Curated Tehran crawl focus supplied by the project owner. Divar place IDs control crawl inclusion; municipal district mappings are review metadata.",
+  "sourceImportedAt": "2026-10-20",
+  "inclusionPolicy": "Every unique Divar place ID present in the supplied table is included once, including Review and Unresolved rows.",
+  "areas": [
+    {
+      "id": 992,
+      "name": "آبشار",
+      "slug": "abshar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 87,
+      "name": "آرارات",
+      "slug": "ararat",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 301,
+      "name": "آرژانتین",
+      "slug": "arjantin",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 951,
+      "name": "آشتیانی",
+      "slug": "ashtiyani",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 273,
+      "name": "آهنگ",
+      "slug": "ahang",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 970,
+      "name": "آهنگران (سراسیاب دولاب)",
+      "slug": "sarasiab-doolab",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 291,
+      "name": "ائمه اطهار",
+      "slug": "farah-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "aemmeh-ye-athaar"
+      ],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 1020,
+      "name": "ابوذر",
+      "slug": "abouzar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "abuzar"
+      ],
+      "municipalDistricts": [
+        14,
+        15
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 1019,
+      "name": "اتابک",
+      "slug": "atabak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 990,
+      "name": "اتحاد",
+      "slug": "etehad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 68,
+      "name": "اختیاریه",
+      "slug": "ekhtiyariyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "ekhtiarieh"
+      ],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4172,
+      "name": "اراضی عباس آباد",
+      "slug": "arazi-abbas-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Unresolved"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "اراضی عباس‌آباد بین چند منطقه شهرداری امتداد دارد؛ بدون مرز دقیق نمی‌توان یک عدد مطمئن ثبت کرد."
+      ]
+    },
+    {
+      "id": 131,
+      "name": "ارامنه",
+      "slug": "aramaneh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 112,
+      "name": "استخر",
+      "slug": "estakhr",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4174,
+      "name": "استقلال",
+      "slug": "esteghlal",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4182,
+      "name": "افسریه جنوبی",
+      "slug": "afsariye-jonubi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 249,
+      "name": "افسریه شمالی",
+      "slug": "afsariyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 287,
+      "name": "امام حسین",
+      "slug": "emam-hossein",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "imam-hossein"
+      ],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "محدوده امام حسین در مجاورت مرز مناطق است؛ منطقه ۱۲ به‌عنوان موقعیت غالب در این فهرست استفاده شده."
+      ]
+    },
+    {
+      "id": 953,
+      "name": "امامت",
+      "slug": "tehran-emamat",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 360,
+      "name": "امانیه",
+      "slug": "amaniyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 937,
+      "name": "امجدیه (خاقانی)",
+      "slug": "tehran-khaghani",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 91,
+      "name": "امیرآباد",
+      "slug": "amir-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 993,
+      "name": "امین حضور",
+      "slug": "aminhozour",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 115,
+      "name": "اوقاف",
+      "slug": "oghaf",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 991,
+      "name": "ایران",
+      "slug": "tehran-iran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 298,
+      "name": "ایرانشهر",
+      "slug": "iranshahr",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "iran-shahr"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 93,
+      "name": "بازار",
+      "slug": "bazaar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4234,
+      "name": "بازار گل خاوران",
+      "slug": "bazar-gol-khavaran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 1023,
+      "name": "بروجردی",
+      "slug": "shahid-borujerdi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 208,
+      "name": "بلوار کشاورز",
+      "slug": "bolvar-e-keshavarz",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "keshavarz-boulevard"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 128,
+      "name": "بنی‌هاشم",
+      "slug": "kazem-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4319,
+      "name": "بوستان جنگلی لویزان",
+      "slug": "bustan-jangali-lavizan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 946,
+      "name": "بوستان سرخه حصار",
+      "slug": "sorkhe-hesar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 103,
+      "name": "بوستان شیان",
+      "slug": "shian",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 938,
+      "name": "بهار",
+      "slug": "bahar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 92,
+      "name": "بهارستان",
+      "slug": "baharestan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 297,
+      "name": "بهجت‌آباد",
+      "slug": "behjat-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1015,
+      "name": "بیسیم",
+      "slug": "bisim",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4143,
+      "name": "پادگان امام حسین",
+      "slug": "padgan-emam-hossein",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4186,
+      "name": "پارک شهر",
+      "slug": "park-shahr",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 67,
+      "name": "پاسداران",
+      "slug": "pasdaran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Unresolved"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "خیابان و محدوده پاسداران در مناطق ۳ و ۴ قرار می‌گیرد؛ بدون مختصات، مقدار یکتا تعیین نشد."
+      ]
+    },
+    {
+      "id": 280,
+      "name": "پامنار",
+      "slug": "pamenar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 965,
+      "name": "پرستار",
+      "slug": "parastar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 292,
+      "name": "پیروزی قدیمی",
+      "slug": "pirouzi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "piroozi"
+      ],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "پیروزی امتداد طولانی دارد؛ محله با این نام به‌طور متداول در منطقه ۱۳ درج می‌شود."
+      ]
+    },
+    {
+      "id": 966,
+      "name": "تاکسیرانی",
+      "slug": "taxirani",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 956,
+      "name": "تسلیحات",
+      "slug": "taslihat",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4175,
+      "name": "تهرانپارس جنوبی",
+      "slug": "tehran-pars",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 109,
+      "name": "تهرانپارس شرقی",
+      "slug": "east-tehranpars",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "east-tehran-pars"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 108,
+      "name": "تهرانپارس غربی",
+      "slug": "west-tehranpars",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "west-tehran-pars"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 123,
+      "name": "تهران‌نو",
+      "slug": "tehran-no",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "tehran-now"
+      ],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 971,
+      "name": "جابری",
+      "slug": "jaberi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 86,
+      "name": "جردن",
+      "slug": "jordan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 204,
+      "name": "جمال‌زاده",
+      "slug": "jamalzadeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 947,
+      "name": "جوادیه تهرانپارس",
+      "slug": "javadiyeh-tehran-pars",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 933,
+      "name": "جهاد",
+      "slug": "jahad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 251,
+      "name": "چهارصد دستگاه",
+      "slug": "charsad-dastgah",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "chaharsad-dastgah"
+      ],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 952,
+      "name": "حافظیه",
+      "slug": "hafezie",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1025,
+      "name": "حسین‌آباد",
+      "slug": "tehran-hosein-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 130,
+      "name": "حشمتیه",
+      "slug": "heshamatiyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "heshmatiyeh"
+      ],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 121,
+      "name": "حکیمیه",
+      "slug": "hakimiyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 948,
+      "name": "خاک سفید",
+      "slug": "khak-sefid",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 989,
+      "name": "خانی آباد نو جنوبی",
+      "slug": "khani-abad-no",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://iranfile.ir/region/tehran"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4137,
+      "name": "خانی آباد نو شمالی",
+      "slug": "khaniabad-no-shomali",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://iranfile.ir/region/tehran"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1017,
+      "name": "خاوران",
+      "slug": "khavaran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "خاوران در جنوب‌شرق روی مرز منطقه ۱۴ و ۱۵ به کار می‌رود؛ برای رکورد موجود ۱۴ انتخاب شد."
+      ]
+    },
+    {
+      "id": 286,
+      "name": "خواجه نصیر طوسی",
+      "slug": "eshrat-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "khajeh-nasir-tousi"
+      ],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 958,
+      "name": "خواجه نظام الملک",
+      "slug": "khaje-nezam-molk",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 209,
+      "name": "دانشگاه تهران قدیمی",
+      "slug": "tehran-university",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "university-of-tehran"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 127,
+      "name": "دبستان",
+      "slug": "dabestan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 940,
+      "name": "درب دوم",
+      "slug": "darb-dowom",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "«درب دوم» در منابع، بین منطقه ۱ و منطقه ۳ متفاوت گزارش شده؛ برای این رکورد ۳ انتخاب شد."
+      ]
+    },
+    {
+      "id": 118,
+      "name": "دردشت",
+      "slug": "dardasht",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 285,
+      "name": "دروازه شمیران",
+      "slug": "darvazeh-shemiran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 71,
+      "name": "دروس",
+      "slug": "darrous",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4130,
+      "name": "دژکام",
+      "slug": "dezhkam",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 272,
+      "name": "دولاب",
+      "slug": "doolab",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 962,
+      "name": "دهقان",
+      "slug": "dehqan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4151,
+      "name": "دهم فروردین",
+      "slug": "dahom-farvardin",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 81,
+      "name": "ده‌ونک",
+      "slug": "vanak-village",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 964,
+      "name": "زاهد گیلانی",
+      "slug": "zahed-gilani",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 955,
+      "name": "زرکش",
+      "slug": "zarkesh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 84,
+      "name": "زرگنده",
+      "slug": "zargandeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 949,
+      "name": "سبلان (لشگر)",
+      "slug": "tehran-lashkar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 950,
+      "name": "سبلان قدیمی",
+      "slug": "sabalan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 299,
+      "name": "سنائی",
+      "slug": "motahari",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "sanaey"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 279,
+      "name": "سنگلج (شاپور)",
+      "slug": "sanglaj",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "sangelaj"
+      ],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 302,
+      "name": "سهروردی",
+      "slug": "north-sohrevardi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "sohrevardi"
+      ],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1028,
+      "name": "سید خندان (جلفا)",
+      "slug": "tehran-jolfa",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 996,
+      "name": "سیروس",
+      "slug": "sirous",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 957,
+      "name": "شارق",
+      "slug": "east-shareq",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://hamyarmap.com/مناطق-22-گانه-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 972,
+      "name": "شاهد قدیمی",
+      "slug": "shahed",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 969,
+      "name": "شکوفه",
+      "slug": "shokoofeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 973,
+      "name": "شکیبا",
+      "slug": "saheb-al-zaman",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 125,
+      "name": "شمس‌آباد",
+      "slug": "shams-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 106,
+      "name": "شمیران‌نو",
+      "slug": "shemiran-no",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "shemiran-now"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 240,
+      "name": "شوش",
+      "slug": "shoosh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Unresolved"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "«شوش» در تقاطع چند منطقه و برای آگهی‌های مختلف به کار می‌رود؛ تعیین یک منطقه بدون مختصات قطعی نیست."
+      ]
+    },
+    {
+      "id": 113,
+      "name": "شهرک امید",
+      "slug": "shahrak-e-omid",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "shahrak-omid"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 271,
+      "name": "شهرک امیرالمومنین",
+      "slug": "shahrak-e-amiralmomenin",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "shahrak-amiralmomenin"
+      ],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 245,
+      "name": "شهرک رضویه",
+      "slug": "karevan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 122,
+      "name": "شهرک زینبیه",
+      "slug": "zeynabeiyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "zeynabiyeh"
+      ],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 944,
+      "name": "شهرک شهید رجایی (کوی نوبنیاد)",
+      "slug": "kuy-nobonyad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 974,
+      "name": "شهمیرزادی",
+      "slug": "aref",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 963,
+      "name": "شهید اسدی",
+      "slug": "shahid-asadi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1035,
+      "name": "شیراز",
+      "slug": "shirazi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 968,
+      "name": "شیوا",
+      "slug": "shiva",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 289,
+      "name": "صد دستگاه",
+      "slug": "sad-dastgah",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 288,
+      "name": "صفا",
+      "slug": "sheykh-al-raeis",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "safa"
+      ],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1016,
+      "name": "طیب",
+      "slug": "tayeb",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 72,
+      "name": "ظفر",
+      "slug": "zafar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 300,
+      "name": "عباس‌آباد",
+      "slug": "abbas-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://irangaah.ir/tehran/neighborhood/abbasabad"
+      ],
+      "reviewNotes": [
+        "عباس‌آباد در منطقه ۷ و بخش‌های کوچکی از مناطق ۳ و ۶ قرار دارد؛ ۷ به‌عنوان منطقه اصلی درج شده."
+      ]
+    },
+    {
+      "id": 116,
+      "name": "علم و صنعت",
+      "slug": "elm-o-sanat",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "university-of-science-and-technology"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 210,
+      "name": "فاطمی",
+      "slug": "north-karegar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "fatemi"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 120,
+      "name": "فدک",
+      "slug": "fadak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 994,
+      "name": "فردوسی",
+      "slug": "ferdowsi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4150,
+      "name": "فرزانه",
+      "slug": "farzane",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 655,
+      "name": "فلسطین (میدان انقلاب)",
+      "slug": "enqelab",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "meydan-enghelab"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 961,
+      "name": "قاسم‌آباد",
+      "slug": "qasemabad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 941,
+      "name": "قبا",
+      "slug": "qoba",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 211,
+      "name": "قزل قلعه",
+      "slug": "qezel-qaleh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 293,
+      "name": "قصر فیروزه ۱",
+      "slug": "qasr-e-firoozeh-yek",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "qasr-firuzeh-yek"
+      ],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 248,
+      "name": "قصر فیروزه ۲",
+      "slug": "qasr-e-firooze-do",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "qasr-firuzeh-do"
+      ],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 70,
+      "name": "قلهک",
+      "slug": "gholhak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "qolhak"
+      ],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 105,
+      "name": "قنات‌کوثر",
+      "slug": "ghanat-kosar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "ghanat-kowsar"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 995,
+      "name": "قیام",
+      "slug": "qiam",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 639,
+      "name": "قیام‌دشت قدیمی",
+      "slug": "qiamdash",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "qiamdasht"
+      ],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 959,
+      "name": "کاج",
+      "slug": "tehran-police",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 945,
+      "name": "کرمان",
+      "slug": "tehran-kerman",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 997,
+      "name": "کوثر",
+      "slug": "kosar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4142,
+      "name": "کوهسار",
+      "slug": "kuhsar-tehran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://hamyarmap.com/مناطق-22-گانه-تهران/"
+      ],
+      "reviewNotes": [
+        "محله کوهسار (منطقه ۴) با شهرک کوهسار غرب تهران متفاوت است."
+      ]
+    },
+    {
+      "id": 241,
+      "name": "کیانشهر",
+      "slug": "shahrak-e-kianshahr",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "shahrak-kyanshahr"
+      ],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 96,
+      "name": "گاندی",
+      "slug": "gandi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "gandhi"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 960,
+      "name": "گرگان",
+      "slug": "tehran-gorgan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4187,
+      "name": "لاله زار",
+      "slug": "lalezar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 104,
+      "name": "لویزان",
+      "slug": "lavizan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 110,
+      "name": "مجیدآباد",
+      "slug": "majid-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 126,
+      "name": "مجیدیه",
+      "slug": "majidiyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4,
+        8
+      ],
+      "reviewStatuses": [
+        "Review"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "تطبیق پیشنهادی بر اساس فهرست محلات؛ توصیه به بررسی مرز دقیق محله پیش از استفاده عملیاتی."
+      ]
+    },
+    {
+      "id": 117,
+      "name": "مدائن",
+      "slug": "sarsabz",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "madaen"
+      ],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 246,
+      "name": "مسعودیه",
+      "slug": "masoudieh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "masoodieh"
+      ],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 976,
+      "name": "مسگرآباد",
+      "slug": "mesgar-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 243,
+      "name": "مشیریه",
+      "slug": "moshiriyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4140,
+      "name": "مطهری",
+      "slug": "motahhari-tehran",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4155,
+      "name": "مظاهری",
+      "slug": "mazaheri",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 266,
+      "name": "مولوی",
+      "slug": "molavi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "rumi"
+      ],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 174,
+      "name": "مهران",
+      "slug": "hasan-abad-shomali",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "kuy-mehran"
+      ],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 95,
+      "name": "مهران (سیدخندان)",
+      "slug": "seyed-khandan",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "seyyed-khandan"
+      ],
+      "municipalDistricts": [
+        3,
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 658,
+      "name": "میدان ولیعصر",
+      "slug": "valiasr",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "meydan-valiasr"
+      ],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 74,
+      "name": "میرداماد",
+      "slug": "mirdamad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1018,
+      "name": "مینابی",
+      "slug": "minabi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 975,
+      "name": "مینای جنوبی",
+      "slug": "mina",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4139,
+      "name": "مینای شمالی (مخبر)",
+      "slug": "minay-shomali-mokhber",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 399,
+      "name": "نارمک",
+      "slug": "narmak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Unresolved"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": [
+        "نارمک در مناطق ۴ و ۸ گسترده است؛ بدون موقعیت دقیق مقدار یکتا تأیید نمی‌شود."
+      ]
+    },
+    {
+      "id": 954,
+      "name": "نارمک جنوبی",
+      "slug": "south-narmak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 967,
+      "name": "نبی اکرم",
+      "slug": "nabi-akram",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 936,
+      "name": "نجات اللهی",
+      "slug": "nejatollahi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 935,
+      "name": "نصرت",
+      "slug": "nosrat",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 132,
+      "name": "نظام‌آباد",
+      "slug": "nezam-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 934,
+      "name": "نظامی گنجوی (توانیر)",
+      "slug": "tavanir",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4171,
+      "name": "نمایشگاه بین المللی",
+      "slug": "namayeshgah-beyn-olmelali",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4173,
+      "name": "نیروی دریایی",
+      "slug": "niruye-daryaei",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 134,
+      "name": "نیروی هوایی (پیروزی)",
+      "slug": "niroo-havayi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        13
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 290,
+      "name": "نیکنام",
+      "slug": "soleymanieh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "tehran-delgosha"
+      ],
+      "municipalDistricts": [
+        14
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 939,
+      "name": "نیلوفر",
+      "slug": "niloufar",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        7
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4152,
+      "name": "والفجر (افسریه)",
+      "slug": "valfajr-afsarieh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 133,
+      "name": "وحیدیه",
+      "slug": "vahidiyeh",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 315,
+      "name": "ونک",
+      "slug": "vanak",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        3
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 270,
+      "name": "هاشم‌آباد",
+      "slug": "hashem-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        15
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 4167,
+      "name": "هرندی",
+      "slug": "harandi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        12
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 1024,
+      "name": "هروی",
+      "slug": "heravi",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        4
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 119,
+      "name": "هفت حوض",
+      "slug": "haft-hoz",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [
+        "hafthoz"
+      ],
+      "municipalDistricts": [
+        8
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    },
+    {
+      "id": 90,
+      "name": "یوسف‌آباد",
+      "slug": "yousef-abad",
+      "parent": 1,
+      "type": "4",
+      "secondSlugs": [],
+      "municipalDistricts": [
+        6
+      ],
+      "reviewStatuses": [
+        "Assigned"
+      ],
+      "references": [
+        "https://greenpepper.ir/محله-تهران/"
+      ],
+      "reviewNotes": []
+    }
+  ]
+}

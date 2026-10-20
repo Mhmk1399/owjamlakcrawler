@@ -1,7 +1,20 @@
+import fs from "node:fs";
+
 const PLACES_URL = "https://map.divarcdn.com/places-web.json";
 const TEHRAN_PLACE_ID = "1";
 const DISTRICT_PLACE_TYPE = "4";
 const BUY_APARTMENT_URL = "https://divar.ir/s/tehran/buy-apartment";
+const FOCUS_AREAS_FILE = new URL("./tehranFocusAreas.json", import.meta.url);
+
+function loadFocusAreas() {
+  const document = JSON.parse(fs.readFileSync(FOCUS_AREAS_FILE, "utf8"));
+  if (!Array.isArray(document?.areas) || !document.areas.length) {
+    throw new Error("Tehran focus-area file contains no areas");
+  }
+  return document.areas;
+}
+
+export const TEHRAN_FOCUS_AREAS = Object.freeze(loadFocusAreas());
 
 export class DivarPlacesError extends Error {
   constructor(message, { status = null, code = "places-error" } = {}) {
@@ -91,14 +104,28 @@ export function apartmentAreaUrl(slug) {
 
 export function buildApartmentAreaQueue(
   areas,
-  { listingsPerArea = 15, maxAreas = 0 } = {},
+  { listingsPerArea = 15, maxAreas = 0, focusAreas = null } = {},
 ) {
   const perAreaLimit = Math.max(1, Math.floor(listingsPerArea));
-  const selected = maxAreas > 0 ? areas.slice(0, Math.floor(maxAreas)) : areas;
+  const focusById = focusAreas
+    ? new Map(focusAreas.map((area) => [Number(area.id), area]))
+    : null;
+  const focused = focusById
+    ? areas.filter((area) => focusById.has(Number(area.id)))
+    : areas;
+  const selected = maxAreas > 0 ? focused.slice(0, Math.floor(maxAreas)) : focused;
   return selected.map((area) => ({
     category: "buy-apartment",
     expectedSubcategory: "buy-residential-apartment",
-    area: { id: area.id, name: area.name, slug: area.slug },
+    area: {
+      id: area.id,
+      name: area.name,
+      slug: area.slug,
+      ...(focusById ? {
+        municipalDistricts: focusById.get(Number(area.id)).municipalDistricts,
+        reviewStatuses: focusById.get(Number(area.id)).reviewStatuses,
+      } : {}),
+    },
     url: apartmentAreaUrl(area.slug),
     limit: perAreaLimit,
   }));
@@ -109,4 +136,5 @@ export const _tehranAreaConstants = {
   TEHRAN_PLACE_ID,
   DISTRICT_PLACE_TYPE,
   BUY_APARTMENT_URL,
+  FOCUS_AREAS_FILE,
 };

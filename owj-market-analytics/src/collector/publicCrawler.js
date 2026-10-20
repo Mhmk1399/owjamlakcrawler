@@ -11,6 +11,7 @@ import { fetchApartmentAreaListings } from "./divarSearch.js";
 import {
   buildApartmentAreaQueue,
   fetchTehranAreas,
+  TEHRAN_FOCUS_AREAS,
 } from "./tehranAreas.js";
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -201,11 +202,13 @@ export class PublicCrawler {
     const partitions = buildApartmentAreaQueue(areas, {
       listingsPerArea: this.config.crawl.listingsPerArea,
       maxAreas: this.config.crawl.maxAreas,
+      focusAreas: TEHRAN_FOCUS_AREAS,
     });
     this.state.areasTotal = partitions.length;
     diagnostics.queue = {
       category: "buy-apartment",
       sourceAreaCount: areas.length,
+      configuredFocusAreaCount: TEHRAN_FOCUS_AREAS.length,
       queuedAreaCount: partitions.length,
       listingsPerArea: this.config.crawl.listingsPerArea,
       targetCandidates: Math.min(

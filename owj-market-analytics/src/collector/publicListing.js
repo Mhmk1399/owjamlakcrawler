@@ -9,6 +9,7 @@ import {
   adaptPublicPostDocument,
   fetchPublicPostDocument,
 } from "./divarPost.js";
+import { resolveListingLocation } from "../locations/hierarchy.js";
 
 const PHONE_LIKE = /(?<!\d)(?:(?:\+98|0098|0)[\d -]{9,16}\d)(?!\d)/g;
 const EMAIL_LIKE = /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
@@ -37,6 +38,7 @@ function fingerprintFor(listing) {
     city: listing.city,
     district: listing.district,
     neighborhood: listing.neighborhood,
+    resolvedLocation: listing.resolvedLocation,
     coordinates: listing.coordinates,
     property: listing.property,
     pricing: listing.pricing,
@@ -93,6 +95,7 @@ export function toPublicMarketListing(
     city: normalized.city ?? null,
     district: normalized.district ?? null,
     neighborhood: normalized.neighborhood ?? null,
+    resolvedLocation: null,
     publishedText: normalized.publishedText ?? null,
     crawlPartition: {
       category: discovered?.category ?? null,
@@ -149,6 +152,7 @@ export function toPublicMarketListing(
     lastSeenAt: now,
     contentFingerprint: "",
   };
+  listing.resolvedLocation = resolveListingLocation(listing);
   listing.contentFingerprint = fingerprintFor(listing);
   return validatePublicMarketListing(listing);
 }

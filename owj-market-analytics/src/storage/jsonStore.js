@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolveListingLocation } from "../locations/hierarchy.js";
 
 async function readJson(file, fallback) {
   try {
@@ -35,15 +36,15 @@ function safeToken(token) {
 }
 
 function migrateListing(listing) {
-  if (!listing || typeof listing !== "object" || listing.crawlPartition) return listing;
-  return {
-    ...listing,
-    crawlPartition: {
+  if (!listing || typeof listing !== "object") return listing;
+  const migrated = listing.crawlPartition ? listing : {
+    ...listing, crawlPartition: {
       category: null,
       expectedSubcategory: listing.subcategory ?? null,
       area: null,
     },
   };
+  return { ...migrated, resolvedLocation: resolveListingLocation(migrated) };
 }
 
 export class JsonMarketStore {

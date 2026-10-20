@@ -48,6 +48,10 @@ test("public projection removes contact and identity fields and derives price pe
     area: null,
   });
   assert.equal(listing.pricing.pricePerMeter, 100_000_000);
+  assert.deepEqual(listing.resolvedLocation, {
+    provinceId: 904, cityId: 1, neighborhoodId: 61,
+    slug: "tajrish", name: "تجریش", matchConfidence: "exact-name",
+  });
   assert.match(listing.title, /\[redacted-phone\]/);
   assert.doesNotMatch(JSON.stringify(listing), /09121234567|Private Person/);
 });

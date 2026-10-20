@@ -5,6 +5,7 @@ import {
   buildApartmentAreaQueue,
   extractTehranAreas,
   fetchTehranAreas,
+  TEHRAN_FOCUS_AREAS,
 } from "../src/collector/tehranAreas.js";
 
 const placesFixture = [
@@ -42,6 +43,16 @@ test("builds deterministic buy-apartment partitions with fifteen candidates per 
   assert.equal(buildApartmentAreaQueue(queue.map((item) => item.area), { maxAreas: 2 }).length, 2);
   assert.equal(apartmentAreaUrl("abshar"), "https://divar.ir/s/tehran/buy-apartment/abshar");
   assert.throws(() => apartmentAreaUrl("bad/slug"), /slug is invalid/);
+});
+
+test("filters crawl partitions to the curated Tehran focus list by stable Divar ID", () => {
+  const queue = buildApartmentAreaQueue(extractTehranAreas(placesFixture), {
+    focusAreas: TEHRAN_FOCUS_AREAS,
+  });
+  assert.deepEqual(queue.map((partition) => partition.area.id), [992]);
+  assert.deepEqual(queue[0].area.municipalDistricts, [12]);
+  assert.deepEqual(queue[0].area.reviewStatuses, ["Assigned"]);
+  assert.equal(TEHRAN_FOCUS_AREAS.length, 168);
 });
 
 test("loads areas through a minimal public request", async () => {

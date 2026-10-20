@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildScoreDetail, buildScoringAnalytics } from "../src/api/scoringViews.js";
+import { buildScoreDetail, buildScoringAnalytics, buildScoringWorkshop } from "../src/api/scoringViews.js";
 
 function listing(token, rank, score, band, neighborhood = "Area A") {
   return {
@@ -50,4 +50,12 @@ test("scoring analytics creates exhaustive bands and histogram", () => {
   assert.equal(analytics.coordinates.exactPercentage, 60);
   assert.equal(analytics.neighborhoods[0].count, 5);
   assert.equal(analytics.valuationValidation.medianAbsolutePercentageError, 15);
+});
+
+test("scoring workshop exposes only the inputs needed for safe live simulation", () => {
+  const workshop = buildScoringWorkshop(document);
+  assert.equal(workshop.formula.dealWeights.modelValue, 45);
+  assert.equal(workshop.listings.length, 5);
+  assert.equal(workshop.listings[0].scores.recommendation, 90);
+  assert.equal(Object.hasOwn(workshop.listings[0], "evidence"), false);
 });

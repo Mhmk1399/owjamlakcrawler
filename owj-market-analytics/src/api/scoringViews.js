@@ -126,3 +126,42 @@ export function buildScoringAnalytics(document, report = {}) {
     },
   };
 }
+
+export function buildScoringWorkshop(document) {
+  const listings = document?.listings || [];
+  return {
+    schemaVersion: "1.0.0",
+    generatedAt: document?.generatedAt || "unknown",
+    scoringVersion: document?.scoringVersion || "unknown",
+    total: listings.length,
+    formula: {
+      dealWeights: { modelValue: 45, nearbyValue: 40, localPosition: 15 },
+      confidenceFloor: 55,
+      riskPenalty: 40,
+      thresholds: { strong: 80, promising: 65, fair: 45 },
+    },
+    listings: listings.map((item) => ({
+      token: item.token,
+      rank: item.rank,
+      title: item.title,
+      neighborhood: item.neighborhood,
+      url: item.url,
+      askingPrice: item.asking?.askingPrice ?? null,
+      askingPricePerMeter: item.asking?.askingPricePerMeter ?? null,
+      property: item.property,
+      amenities: item.amenities,
+      scores: {
+        recommendation: item.scores.recommendation,
+        band: item.scores.band,
+        dealValue: item.scores.dealValue,
+        modelValue: item.scores.modelValue,
+        nearbyValue: item.scores.nearbyValue,
+        localPosition: item.scores.localPosition,
+        confidence: item.scores.confidence,
+        risk: item.scores.risk,
+        dataQuality: item.scores.dataQuality,
+        propertyQuality: item.scores.propertyQuality,
+      },
+    })),
+  };
+}

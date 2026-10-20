@@ -257,7 +257,9 @@ export function AppHeader({ active = "overview" }) {
 
   const navLinks = [
     { key: "overview", label: "نمای کلی", href: "/" },
+    { key: "locations", label: "کاوش مناطق", href: "/explore/tehran" },
     { key: "analytics", label: "تحلیل امتیاز", href: "/score-analytics" },
+    { key: "workshop", label: "کارگاه امتیاز", href: "/score-workshop" },
   ];
 
   return (
